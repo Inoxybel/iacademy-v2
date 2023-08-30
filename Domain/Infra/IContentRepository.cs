@@ -1,4 +1,7 @@
-﻿namespace Domain.Infra;
+﻿using Domain.DTO.Content;
+using Domain.Entities;
+
+namespace Domain.Infra;
 
 public interface IContentRepository
 {
