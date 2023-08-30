@@ -1,9 +1,8 @@
-﻿namespace CrossCutting.Enums
+﻿namespace CrossCutting.Enums;
+
+public enum ExerciseStatus
 {
-    public enum ExerciseStatus
-    {
-        WaitingToDo,
-        WaitingCorrection,
-        Finished
-    }
+    WaitingToDo,
+    WaitingCorrection,
+    Finished
 }

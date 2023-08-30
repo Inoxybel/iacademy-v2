@@ -1,9 +1,8 @@
-﻿namespace CrossCutting.Enums
+﻿namespace CrossCutting.Enums;
+
+public enum ActivityType
 {
-    public enum ActivityType
-    {
-        MultipleChoice,
-        SingleChoice,
-        Code
-    }
+    MultipleChoice,
+    SingleChoice,
+    Code
 }

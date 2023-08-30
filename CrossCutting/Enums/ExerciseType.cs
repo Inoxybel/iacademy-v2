@@ -1,8 +1,8 @@
-﻿namespace CrossCutting.Enums
+﻿namespace CrossCutting.Enums;
+
+public enum ExerciseType
 {
-    public enum ExerciseType
-    {
-        Default,
-        Pendency
-    }
+    Default,
+    Pendency
 }
+
