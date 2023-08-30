@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net7.0": {}
+    "net7.0": {
+      "CrossCutting/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/CrossCutting.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/CrossCutting.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "CrossCutting/1.0.0": {
+      "type": "project",
+      "path": "../CrossCutting/CrossCutting.csproj",
+      "msbuildProject": "../CrossCutting/CrossCutting.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net7.0": []
+    "net7.0": [
+      "CrossCutting >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\thdev\\.nuget\\packages\\": {},
@@ -39,7 +58,11 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\thdev\\Documentos\\Fiap\\CHALLENGE\\Sprint-3\\IAcademy\\CrossCutting\\CrossCutting.csproj": {
+              "projectPath": "C:\\Users\\thdev\\Documentos\\Fiap\\CHALLENGE\\Sprint-3\\IAcademy\\CrossCutting\\CrossCutting.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
