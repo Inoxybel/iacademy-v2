@@ -10,4 +10,8 @@
     <ProjectReference Include="..\CrossCutting\CrossCutting.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Infra\" />
+  </ItemGroup>
+
 </Project>
