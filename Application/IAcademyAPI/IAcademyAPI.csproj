@@ -23,4 +23,8 @@
     <Folder Include="Infra\HealthCheck\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infra\Infra.csproj" />
+  </ItemGroup>
+
 </Project>

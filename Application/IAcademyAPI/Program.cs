@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Azure.Identity;
 using IAcademyAPI.Infra.APIConfigurations;
+using Infra.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 
