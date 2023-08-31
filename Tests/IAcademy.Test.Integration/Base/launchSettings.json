@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "IAcademy.Test.Integration": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Integration"
+      }
+    }
+  }
+}
