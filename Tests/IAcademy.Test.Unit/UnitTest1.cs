@@ -1,4 +1,4 @@
-namespace Tests;
+namespace IAcademy.Test.Unit;
 
 public class UnitTest1
 {
