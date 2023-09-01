@@ -4,6 +4,7 @@ namespace Domain.DTO.Summary;
 
 public class SummaryRequest
 {
+    public string OriginId { get; set; }
     public string OwnerId { get; set; }
     public string ConfigurationId { get; set; }
     public bool IsAvaliable { get; set; }

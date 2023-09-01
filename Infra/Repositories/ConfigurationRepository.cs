@@ -36,7 +36,7 @@ public class ConfigurationRepository : IConfigurationRepository
     {
         try
         {
-            var filterDefinition = Builders<Configuration>.Filter.Eq(c => c.Id, configuration.Id);
+            var filterDefinition = Builders<Configuration>.Filter.Eq(c => c.Id, configurationId);
 
             var filterUpdate = Builders<Configuration>.Update
                 .Set(c => c.Summary, configuration.Summary)
@@ -48,49 +48,7 @@ public class ConfigurationRepository : IConfigurationRepository
 
             var result = await _dbContext.Configuration.UpdateOneAsync(filterDefinition, filterUpdate, null, cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    public async Task<bool> UpdateAll(string summaryId, List<Content> contents, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var requestsToUpdate = new List<WriteModel<Content>>();
-
-            foreach (var content in contents)
-            {
-                var filter = Builders<Content>.Filter.Eq(c => c.SummaryId, summaryId);
-                var update = Builders<Content>.Update
-                    .Set(c => c.OwnerId, content.OwnerId)
-                    .Set(c => c.SummaryId, content.SummaryId)
-                    .Set(c => c.ExerciceId, content.ExerciceId)
-                    .Set(c => c.SubtopicIndex, content.SubtopicIndex)
-                    .Set(c => c.Title, content.Title)
-                    .Set(c => c.Body, content.Body)
-                    .Set(c => c.UpdatedDate, content.UpdatedDate);
-
-                var upsert = new UpdateOneModel<Content>(filter, update)
-                {
-                    IsUpsert = false
-                };
-
-                requestsToUpdate.Add(upsert);
-            }
-
-            var result = await _dbContext.Content.BulkWriteAsync(requestsToUpdate, cancellationToken: cancellationToken);
-
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {

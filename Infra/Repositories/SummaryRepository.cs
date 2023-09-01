@@ -56,7 +56,7 @@ public class SummaryRepository : ISummaryRepository
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<bool> Save(Summary summary, CancellationToken cancellationToken)
+    public async Task<bool> Save(Summary summary, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -69,13 +69,14 @@ public class SummaryRepository : ISummaryRepository
         }
     }
 
-    public async Task<bool> Update(string summaryId, SummaryRequest summary, CancellationToken cancellationToken)
+    public async Task<bool> Update(string summaryId, SummaryRequest summary, CancellationToken cancellationToken = default)
     {
         try
         {
             var filterDefinition = Builders<Summary>.Filter.Eq(s => s.Id, summaryId);
 
             var updateDefinition = Builders<Summary>.Update
+                .Set(s => s.OriginId, summary.OriginId)
                 .Set(s => s.OwnerId, summary.OwnerId)
                 .Set(s => s.ConfigurationId, summary.ConfigurationId)
                 .Set(s => s.IsAvaliable, summary.IsAvaliable)
@@ -87,10 +88,7 @@ public class SummaryRepository : ISummaryRepository
 
             var result = await _dbContext.Summary.UpdateOneAsync(filterDefinition, updateDefinition, null, cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {

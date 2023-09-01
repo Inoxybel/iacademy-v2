@@ -61,10 +61,12 @@ public class ContentRepository : IContentRepository
 
             var filterUpdate = Builders<Content>.Update
                 .Set(c => c.OwnerId, request.OwnerId)
+                .Set(c => c.ConfigurationId, request.ConfigurationId)
                 .Set(c => c.SummaryId, request.SummaryId)
                 .Set(c => c.ExerciceId, request.ExerciceId)
                 .Set(c => c.SubtopicIndex, request.SubtopicIndex)
                 .Set(c => c.Title, request.Title)
+                .Set(c => c.Theme, request.Theme)
                 .Set(c => c.Body, request.Body)
                 .Set(c => c.UpdatedDate, DateTime.UtcNow);
 
@@ -92,6 +94,7 @@ public class ContentRepository : IContentRepository
                 var filter = Builders<Content>.Filter.Eq(c => c.SummaryId, summaryId);
                 var update = Builders<Content>.Update
                     .Set(c => c.OwnerId, content.OwnerId)
+                    .Set(c => c.ConfigurationId, content.ConfigurationId)
                     .Set(c => c.SummaryId, content.SummaryId)
                     .Set(c => c.ExerciceId, content.ExerciceId)
                     .Set(c => c.SubtopicIndex, content.SubtopicIndex)

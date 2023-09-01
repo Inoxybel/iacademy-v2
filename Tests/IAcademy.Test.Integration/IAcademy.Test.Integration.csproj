@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Application\IAcademyAPI\IAcademyAPI.csproj" />
+    <ProjectReference Include="..\IAcademy.Test.Shared\IAcademy.Test.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

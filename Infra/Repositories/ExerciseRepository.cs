@@ -52,6 +52,7 @@ public class ExerciseRepository : IExerciseRepository
 
             var updateDefinition = Builders<Exercise>.Update
                 .Set(s => s.OwnerId, exercise.OwnerId)
+                .Set(s => s.CorrectionId, exercise.CorrectionId)
                 .Set(s => s.ConfigurationId, exercise.ConfigurationId)
                 .Set(s => s.Status, exercise.Status)
                 .Set(s => s.Type, exercise.Type)
@@ -62,10 +63,7 @@ public class ExerciseRepository : IExerciseRepository
 
             var result = await _dbContext.Exercise.UpdateOneAsync(filterDefinition, updateDefinition, null, cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {

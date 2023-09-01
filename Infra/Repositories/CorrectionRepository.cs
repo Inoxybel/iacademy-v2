@@ -47,10 +47,7 @@ public class CorrectionRepository : ICorrectionRepository
 
             var result = await _dbContext.Correction.UpdateOneAsync(filterDefinition, updateDefinition, null, cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {

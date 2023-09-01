@@ -3,6 +3,7 @@
 public class Summary
 {
     public string Id { get; set; }
+    public string OriginId { get; set; }
     public string OwnerId { get; set; }
     public string ConfigurationId { get; set; }
     public DateTime CreatedDate { get; set; }
