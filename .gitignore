@@ -8,6 +8,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+**/bin/
+**/obj/
 
 # Arquivos de Recuperação de Falha do Windows
 *.NTVS_*_backup.*
@@ -27,3 +29,4 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]og[Ll]/
+
