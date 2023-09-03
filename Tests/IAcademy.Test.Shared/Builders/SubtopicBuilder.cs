@@ -10,7 +10,7 @@ public class SubtopicBuilder
 
     private static Subtopic CreateDefault() => new()
     {
-        Index = "1",
+        Index = "1.1",
         Title = "Title",
         ContentId = Guid.NewGuid().ToString()
     };

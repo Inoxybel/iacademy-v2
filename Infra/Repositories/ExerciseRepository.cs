@@ -34,7 +34,13 @@ public class ExerciseRepository : IExerciseRepository
     {
         try
         {
-            await _dbContext.Exercise.InsertOneAsync(exercise, cancellationToken: cancellationToken);
+            var filter = Builders<Exercise>.Filter.Eq(c => c.Id, exercise.Id);
+            var options = new ReplaceOptions
+            {
+                IsUpsert = true
+            };
+
+            _ = await _dbContext.Exercise.ReplaceOneAsync(filter, exercise, options, cancellationToken: cancellationToken);
 
             return true;
         }
@@ -54,6 +60,7 @@ public class ExerciseRepository : IExerciseRepository
                 .Set(s => s.OwnerId, exercise.OwnerId)
                 .Set(s => s.CorrectionId, exercise.CorrectionId)
                 .Set(s => s.ConfigurationId, exercise.ConfigurationId)
+                .Set(s => s.ContentId, exercise.ContentId)
                 .Set(s => s.Status, exercise.Status)
                 .Set(s => s.Type, exercise.Type)
                 .Set(s => s.SendedAt, exercise.SendedAt)

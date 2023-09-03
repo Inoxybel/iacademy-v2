@@ -6,6 +6,7 @@ public class Exercise
 {
     public string Id { get; set; }
     public string OwnerId { get; set; }
+    public string ContentId { get; set; }
     public string CorrectionId { get; set; }
     public string ConfigurationId { get; set; }
     public ExerciseStatus Status { get; set; }

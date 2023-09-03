@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using Azure.Identity;
+using Domain.Services;
 using IAcademyAPI.Infra.APIConfigurations;
+using Service;
+using Service.Integrations.OpenAI.Configuration;
 
 namespace IAcademyAPI;
 
@@ -52,6 +55,13 @@ public class Program
     {
         MongoConfiguration.RegisterConfigurations();
 
+        services.AddScoped<ISummaryService, SummaryService>();
+        services.AddScoped<IContentService, ContentService>();
+        services.AddScoped<IExerciseService, ExerciseService>();
+        services.AddScoped<IGeneratorService, GeneratorService>();
+        services.AddScoped<ICorrectionService, CorrectionService>();
+        services.AddScoped<IConfigurationService, ConfigurationService>();
+
         services
             .AddControllers()
             .ConfigureApiBehaviorOptions(options =>
@@ -66,6 +76,7 @@ public class Program
         services
             .AddSwagger()
             .AddOptions(configuration)
+            .AddOpenAIService(configuration)
             .AddRepositories()
             .AddHealthChecks()
             .AddMongoDb(configuration["IAcademy:MongoDB:ConnectionString"], name: "health-check-mongodb");

@@ -30,7 +30,13 @@ public class ContentRepository : IContentRepository
     {
         try
         {
-            await _dbContext.Content.InsertOneAsync(content, cancellationToken: cancellationToken);
+            var filter = Builders<Content>.Filter.Eq(c => c.Id, content.Id);
+            var options = new ReplaceOptions 
+            { 
+                IsUpsert = true 
+            };
+
+            _ = await _dbContext.Content.ReplaceOneAsync(filter, content, options, cancellationToken);
             return content.Id;
         }
         catch
@@ -72,10 +78,7 @@ public class ContentRepository : IContentRepository
 
             var result = await _dbContext.Content.UpdateOneAsync(filterDefinition, filterUpdate, null, cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {
@@ -112,10 +115,7 @@ public class ContentRepository : IContentRepository
 
             var result = await _dbContext.Content.BulkWriteAsync(requestsToUpdate, cancellationToken: cancellationToken);
 
-            if (result.ModifiedCount > 0)
-                return true;
-
-            return false;
+            return result.ModifiedCount > 0;
         }
         catch
         {

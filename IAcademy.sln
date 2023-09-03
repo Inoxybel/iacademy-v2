@@ -3,33 +3,33 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{7B149D81-EA2E-42E9-AD6E-3DB17A1B80B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{7B149D81-EA2E-42E9-AD6E-3DB17A1B80B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCutting", "CrossCutting\CrossCutting.csproj", "{8FA07105-F311-49B7-8AA7-3F6EE8D046B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrossCutting", "CrossCutting\CrossCutting.csproj", "{8FA07105-F311-49B7-8AA7-3F6EE8D046B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service", "Service\Service.csproj", "{A27A71BD-0B28-4AE2-B905-A8BAFC6FB734}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service", "Service\Service.csproj", "{A27A71BD-0B28-4AE2-B905-A8BAFC6FB734}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infra", "Infra\Infra.csproj", "{A86A5EE4-5BC8-44C8-89A3-93E4A2FA164B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infra", "Infra\Infra.csproj", "{A86A5EE4-5BC8-44C8-89A3-93E4A2FA164B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{F4D228A2-2C31-438B-8E14-ABFA1C7A2DE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IAcademyAPI", "Application\IAcademyAPI\IAcademyAPI.csproj", "{834002C2-098B-4BEC-BF1F-CF6D41C38B52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IAcademyAPI", "Application\IAcademyAPI\IAcademyAPI.csproj", "{834002C2-098B-4BEC-BF1F-CF6D41C38B52}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A27A71BD-0B28-4AE2-B905-A8BAFC6FB734} = {A27A71BD-0B28-4AE2-B905-A8BAFC6FB734}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{11F4890F-C259-4899-839A-1DFD4F0E4A8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IAcademy.Test.Integration", "Tests\IAcademy.Test.Integration\IAcademy.Test.Integration.csproj", "{B9650F6B-C721-4863-A162-6D59D479F785}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IAcademy.Test.Integration", "Tests\IAcademy.Test.Integration\IAcademy.Test.Integration.csproj", "{B9650F6B-C721-4863-A162-6D59D479F785}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IAcademy.Test.Shared", "Tests\IAcademy.Test.Shared\IAcademy.Test.Shared.csproj", "{65436EA4-6D8B-449E-8B3B-4202DD1D381C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IAcademy.Test.Shared", "Tests\IAcademy.Test.Shared\IAcademy.Test.Shared.csproj", "{65436EA4-6D8B-449E-8B3B-4202DD1D381C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IAcademy.Test.Unit", "Tests\IAcademy.Test.Unit\IAcademy.Test.Unit.csproj", "{534A3EBB-1A63-4B3C-80E5-6A3AD63B6D21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IAcademy.Test.Unit", "Tests\IAcademy.Test.Unit\IAcademy.Test.Unit.csproj", "{534A3EBB-1A63-4B3C-80E5-6A3AD63B6D21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7B149D81-EA2E-42E9-AD6E-3DB17A1B80B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -48,10 +48,6 @@ Global
 		{A86A5EE4-5BC8-44C8-89A3-93E4A2FA164B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A86A5EE4-5BC8-44C8-89A3-93E4A2FA164B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A86A5EE4-5BC8-44C8-89A3-93E4A2FA164B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F62EA645-11C0-4792-BDB9-03478A503B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F62EA645-11C0-4792-BDB9-03478A503B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F62EA645-11C0-4792-BDB9-03478A503B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F62EA645-11C0-4792-BDB9-03478A503B04}.Release|Any CPU.Build.0 = Release|Any CPU
 		{834002C2-098B-4BEC-BF1F-CF6D41C38B52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{834002C2-098B-4BEC-BF1F-CF6D41C38B52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{834002C2-098B-4BEC-BF1F-CF6D41C38B52}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -69,10 +65,16 @@ Global
 		{534A3EBB-1A63-4B3C-80E5-6A3AD63B6D21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{534A3EBB-1A63-4B3C-80E5-6A3AD63B6D21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{834002C2-098B-4BEC-BF1F-CF6D41C38B52} = {F4D228A2-2C31-438B-8E14-ABFA1C7A2DE0}
 		{B9650F6B-C721-4863-A162-6D59D479F785} = {11F4890F-C259-4899-839A-1DFD4F0E4A8A}
 		{65436EA4-6D8B-449E-8B3B-4202DD1D381C} = {11F4890F-C259-4899-839A-1DFD4F0E4A8A}
 		{534A3EBB-1A63-4B3C-80E5-6A3AD63B6D21} = {11F4890F-C259-4899-839A-1DFD4F0E4A8A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03836C95-90CF-456B-AF26-8421AD4C6DDD}
 	EndGlobalSection
 EndGlobal

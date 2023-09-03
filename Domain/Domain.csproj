@@ -10,9 +10,4 @@
     <ProjectReference Include="..\CrossCutting\CrossCutting.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Infra\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
