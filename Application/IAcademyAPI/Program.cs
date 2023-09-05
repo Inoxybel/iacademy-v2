@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Azure.Identity;
 using Domain.Services;
 using IAcademyAPI.Infra.APIConfigurations;
+using Microsoft.AspNetCore.Mvc;
 using Service;
 using Service.Integrations.OpenAI.Configuration;
 
@@ -15,32 +15,20 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+        if (builder.Configuration["ASPNETCORE_ENVIRONMENT"] != "Development")
         {
-            var settings = config.Build();
-
-            var x = settings["ASPNETCORE_ENVIRONMENT"];
-
-            if (settings["ASPNETCORE_ENVIRONMENT"] != "Development")
+            builder.Configuration.AddAzureAppConfiguration(options =>
             {
-                config.AddAzureAppConfiguration(options =>
-                {
-                    options.Connect(settings["c"]);
-                    options.ConfigureKeyVault(opt =>
-                        {
-                            opt.SetCredential(new DefaultAzureCredential());
-                        })
-                        .TrimKeyPrefix("IAcademy")
-                        .Select("IAcademy:Mongo:*")
-                        .Select("IAcademy:ExternalServices:*")
-                        .ConfigureRefresh(config =>
-                        {
-                            config.SetCacheExpiration(TimeSpan.FromMinutes(1));
-                            config.Register("IAcademy", true);
-                        });
-                });
-            }
-        });
+                options.Connect(Environment.GetEnvironmentVariable("AppConfigConnectionString"))
+                    .Select("IAcademy:Mongo:*")
+                    .Select("IAcademy:ExternalServices:*")
+                    .ConfigureRefresh(refreshOptions =>
+                    {
+                        refreshOptions.SetCacheExpiration(TimeSpan.FromMinutes(1));
+                        refreshOptions.Register("IAcademy", true);
+                    });
+            });
+        }
 
         ConfigureServices(builder.Services, builder.Configuration);
 
@@ -72,6 +60,11 @@ public class Program
             {
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
+            
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
 
         services
             .AddSwagger()
@@ -84,18 +77,17 @@ public class Program
 
     public static void ConfigureApp(WebApplication app, IConfiguration configuration)
     {
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
-                c.RoutePrefix = "swagger";
-                c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
-            });
-        }
 
-        app.UseHttpsRedirection();
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
+            c.RoutePrefix = "swagger";
+            c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+        });
+
+
+        //app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
     }

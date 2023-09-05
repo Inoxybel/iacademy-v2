@@ -44,7 +44,7 @@ public static class AppConfiguration
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
-    {
+    {  
         services.AddScoped<ISummaryRepository, SummaryRepository>();
         services.AddScoped<IContentRepository, ContentRepository>();
         services.AddScoped<IExerciseRepository, ExerciseRepository>();

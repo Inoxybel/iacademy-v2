@@ -1,33 +1,25 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:18082",
-      "sslPort": 44354
-    }
-  },
+{
   "profiles": {
-    "http": {
+    "Development": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5210",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5210"
     },
-    "https": {
+    "Local": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:7247;http://localhost:5210",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "ASPNETCORE_ENVIRONMENT": "Local",
+        "AppConfigConnectionString": "Endpoint=https://iacademy-configurations.azconfig.io;Id=yEIK;Secret=M/8ArKmpyqrzG2ymYJLmxWY9xnawcfmQN6Oi6U0c3Q4="
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7247;http://localhost:5210"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -36,6 +28,15 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:18082",
+      "sslPort": 44354
     }
   }
 }

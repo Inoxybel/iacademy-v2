@@ -177,11 +177,11 @@ public class SummaryService : ISummaryService
         };
     }
 
-    public async Task<ServiceResult<string>> Save(string summaryId, SummaryRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> Save(SummaryRequest request, CancellationToken cancellationToken = default)
     {
         var summary = new Summary
         {
-            Id = summaryId,
+            Id = Guid.NewGuid().ToString(),
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
             CreatedDate = DateTime.UtcNow,
@@ -204,7 +204,7 @@ public class SummaryService : ISummaryService
         return new()
         {
             Success = true,
-            Data = summaryId
+            Data = summary.Id
         };
     }
 

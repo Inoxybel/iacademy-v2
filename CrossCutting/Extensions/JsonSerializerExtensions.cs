@@ -18,6 +18,20 @@ public static class JsonSerializerExtensions
 
     public static string Serialize<T>(this T objectToSerialize) => JsonSerializer.Serialize(objectToSerialize, camelCaseOptions);
 
-    public static T Deserialize<T>(this string stringToDeserialize, bool camel = false) =>
-        JsonSerializer.Deserialize<T>(stringToDeserialize, camel ? camelCaseOptions : defaultOptions);
+    public static T Deserialize<T>(this string stringToDeserialize, bool camel = false) where T : new()
+    {
+        try
+        {
+            var result = JsonSerializer.Deserialize<T>(stringToDeserialize, camel ? camelCaseOptions : defaultOptions);
+
+            return result;
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex);
+
+            return new();
+        }
+    }
+
 }

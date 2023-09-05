@@ -654,7 +654,7 @@ public class ContentServiceTests
     }
 
     [Fact]
-    public async Task MakeContent_SHOULD_Return_ContentId_WHEN_Successful()
+    public async Task MakeContent_SHOULD_Return_ContentIds_WHEN_Successful()
     {
         var summaryId = "someSummaryId";
         var summaryResponse = new ServiceResult<Summary>()
@@ -727,7 +727,7 @@ public class ContentServiceTests
 
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNullOrEmpty();
-        result.Data.Count().Should().Be(36);
+        result.Data.Count().Should().Be(2);
     }
 
     [Fact]

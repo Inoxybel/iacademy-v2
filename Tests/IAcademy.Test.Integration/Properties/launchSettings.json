@@ -3,7 +3,7 @@
     "IAcademy.Test.Integration": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "AppConfigConnectionString": "https://iacademy-configurations.azconfig.io;Id=yEIK;Secret=M/8ArKmpyqrzG2ymYJLmxWY9xnawcfmQN6Oi6U0c3Q4="
       }
     }
   }

@@ -59,20 +59,15 @@ public class GeneratorService : IGeneratorService
                 ErrorMessage = "Error to get OpenAI response"
             };
 
-        var activities = openAIResponse.Choices.First().Message.Content.Deserialize<List<Activity>>();
-
-        var exercise = new Exercise()
-        {
-            Id = Guid.NewGuid().ToString(),
-            OwnerId = content.OwnerId,
-            ConfigurationId = configurationGetResult.Data.Id,
-            ContentId = content.Id,
-            Status = ExerciseStatus.WaitingToDo,
-            Type = ExerciseType.Default,
-            TopicIndex = content.SubtopicIndex,
-            Title = content.Title,
-            Exercises = activities
-        };
+        var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
+        exercise.Id = Guid.NewGuid().ToString();
+        exercise.OwnerId = content.OwnerId;
+        exercise.ConfigurationId = configurationGetResult.Data.Id;
+        exercise.ContentId = content.Id;
+        exercise.Status = ExerciseStatus.WaitingToDo;
+        exercise.Type = ExerciseType.Default;
+        exercise.TopicIndex = content.SubtopicIndex;
+        exercise.Title = content.Title;
 
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 
@@ -148,19 +143,15 @@ public class GeneratorService : IGeneratorService
                 ErrorMessage = "Error to get OpenAI response"
             };
 
-        var activities = openAIResponse.Choices.First().Message.Content.Deserialize<List<Activity>>();
-
-        var exercise = new Exercise()
-        {
-            Id = Guid.NewGuid().ToString(),
-            OwnerId = content.OwnerId,
-            ConfigurationId = configurationGetResult.Data.Id,
-            Status = ExerciseStatus.WaitingToDo,
-            Type = ExerciseType.Pendency,
-            TopicIndex = content.SubtopicIndex,
-            Title = content.Title,
-            Exercises = activities
-        };
+        var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
+        exercise.Id = Guid.NewGuid().ToString();
+        exercise.OwnerId = content.OwnerId;
+        exercise.ConfigurationId = configurationGetResult.Data.Id;
+        exercise.ContentId = content.Id;
+        exercise.Status = ExerciseStatus.WaitingToDo;
+        exercise.Type = ExerciseType.Pendency;
+        exercise.TopicIndex = content.SubtopicIndex;
+        exercise.Title = content.Title;
 
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 

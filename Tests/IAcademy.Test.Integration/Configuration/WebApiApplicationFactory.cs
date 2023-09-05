@@ -1,7 +1,9 @@
 ﻿using IAcademyAPI;
+using Infra.Options;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace IAcademy.Test.Integration.Configuration;
@@ -12,30 +14,31 @@ public class WebApiApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureHostConfiguration(config =>
         {
-            var integrationAppSettings = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.Integration.json")
-                .Build();
-
-            config.AddConfiguration(integrationAppSettings);
-
             var launchSettingsConfig = new ConfigurationBuilder()
                 .AddJsonFile("Properties/launchSettings.json")
                 .Build();
 
-            var envVariables = launchSettingsConfig.GetSection("profiles:IAcademy.Test.Integration:environmentVariables").GetChildren();
-            foreach (var item in envVariables)
-            {
-                Environment.SetEnvironmentVariable(item.Key, item.Value);
-            }
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         });
+
         return base.CreateHost(builder);
+    }
+
+    public void ConfigureDatabaseInstanceOptions(IServiceCollection services)
+    {
+        services.Configure<DatabaseInstanceOptions>(options =>
+        {
+            options.ConnectionString = "mongodb://localhost:27017";
+            options.Name = "IAcademyDB";
+        });
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(service =>
+        builder.ConfigureServices(services =>
         {
-            // service.AddServiceWithFaker<CLASSE>();
+            ConfigureDatabaseInstanceOptions(services);
+            // services.AddServiceWithFaker<CLASSE>();
         });
     }
 }

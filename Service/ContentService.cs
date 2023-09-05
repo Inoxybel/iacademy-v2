@@ -179,28 +179,28 @@ public class ContentService : IContentService
         };
     }
 
-    public async Task<ServiceResult<string>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<List<string>>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default)
     {
-        Content newContent = new Content();
+        Content newContent = new();
 
         var getSummaryResult = await _summaryService.Get(summaryId, cancellationToken);
 
         if (!getSummaryResult.Success)
-            return MakeErrorResult("Error to find summary");
+            return MakeErrorResult<List<string>>("Error to find summary");
 
         var summary = getSummaryResult.Data;
 
         var getConfigurationResult = await _configurationService.Get(summary.ConfigurationId, cancellationToken);
 
         if (!getConfigurationResult.Success)
-            return MakeErrorResult("Error to find configuration");
+            return MakeErrorResult<List<string>>("Error to find configuration");
 
         var configuration = getConfigurationResult.Data;
 
         var topic = summary.Topics.Find(t => t.Index == request.TopicIndex);
 
         if (topic is null)
-            return MakeErrorResult("Error to find index on topic");
+            return MakeErrorResult<List<string>>("Error to find index on topic");
 
         var topicSummary = $"{topic.Index} {topic.Title}: {string.Join(", ", topic.Subtopics.Select(st => st.Index + " " + st.Title))}";
         var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, string.Empty, topicSummary);
@@ -208,12 +208,14 @@ public class ContentService : IContentService
         var openAIResponse = await _openAIService.DoRequest(requestString);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult("Error to get OpenAI content create response");
+            return MakeErrorResult<List<string>>("Error to get OpenAI content create response");
 
         var newContents = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>();
 
         if (!newContents.IsValid())
             newContents = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>(true);
+
+        var idList = new List<string>();
 
         foreach (var subtopic in newContents.Subtopics)
         {
@@ -240,19 +242,19 @@ public class ContentService : IContentService
             var saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
             if (string.IsNullOrEmpty(saveContentResult))
-                return MakeErrorResult("Error to save content");
+                return MakeErrorResult<List<string>>("Error to save content");
 
             var makeExerciseResult = await _exerciseGeneratorService.MakeExercise(newContent.Id, cancellationToken);
 
             if (!makeExerciseResult.Success)
-                return MakeErrorResult("Error to make exercise");
+                return MakeErrorResult<List<string>>("Error to make exercise");
 
             newContent.ExerciceId = makeExerciseResult.Data;
 
             saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
             if (string.IsNullOrEmpty(saveContentResult))
-                return MakeErrorResult("Error to update content");
+                return MakeErrorResult<List<string>>("Error to update content");
 
             var subtopicToUpdade = summary.Topics
                 .SelectMany(topic => topic.Subtopics)
@@ -260,6 +262,8 @@ public class ContentService : IContentService
 
             if (subtopicToUpdade is not null)
                 subtopicToUpdade.ContentId = newContent.Id;
+
+            idList.Add(newContent.Id);
         }
 
         var summaryUpdateRequest = new SummaryRequest()
@@ -276,12 +280,12 @@ public class ContentService : IContentService
         var updateSummaryResult = await _summaryService.Update(summaryId, summaryUpdateRequest, cancellationToken);
 
         if (!updateSummaryResult.Success)
-            return MakeErrorResult("Error to update summary");
+            return MakeErrorResult<List<string>>("Error to update summary");
 
         return new()
         {
             Success = true,
-            Data = newContent.Id
+            Data = idList
         };
     }
 
@@ -290,12 +294,12 @@ public class ContentService : IContentService
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
-            return MakeErrorResult("Content not found");
+            return MakeErrorResult<string>("Content not found");
 
         var getConfigurationResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
         if (!getConfigurationResult.Success)
-            return MakeErrorResult("Error to find configuration");
+            return MakeErrorResult<string>("Error to find configuration");
 
         var configuration = getConfigurationResult.Data;
 
@@ -307,7 +311,7 @@ public class ContentService : IContentService
         var openAIResponse = await _openAIService.DoRequest(requestString);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult("Error to get OpenAI response");
+            return MakeErrorResult<string>("Error to get OpenAI response");
 
         var newContent = openAIResponse.Choices.First().Message.Content.Deserialize<Content>();
 
@@ -318,7 +322,7 @@ public class ContentService : IContentService
         var saveContentResult = await _contentRepository.Save(content, cancellationToken);
 
         if (string.IsNullOrEmpty(saveContentResult))
-            return MakeErrorResult("Error to update content");
+            return MakeErrorResult<string>("Error to update content");
 
         return new()
         {
@@ -327,10 +331,11 @@ public class ContentService : IContentService
         };
     }
 
-    private static ServiceResult<string> MakeErrorResult(string message) => new()
+    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
     {
         Success = false,
-        ErrorMessage = message
+        ErrorMessage = message,
+        Data = default
     };
 
     private static List<Body> MakeNewContentList(List<Body> contents, List<Body> newContent)

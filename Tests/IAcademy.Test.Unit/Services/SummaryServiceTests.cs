@@ -212,10 +212,10 @@ namespace IAcademy.Test.Unit.Services
             _mockSummaryRepository.Setup(m => m.Save(It.IsAny<Summary>(), default))
                 .ReturnsAsync(true);
 
-            var result = await _summaryService.Save(summaryId, request);
+            var result = await _summaryService.Save(request);
 
             result.Success.Should().BeTrue();
-            result.Data.Should().Be(summaryId);
+            result.Data.Count().Should().Be(36);
         }
 
         [Fact]
@@ -227,7 +227,7 @@ namespace IAcademy.Test.Unit.Services
             _mockSummaryRepository.Setup(m => m.Save(It.IsAny<Summary>(), default))
                 .ReturnsAsync(false);
 
-            var result = await _summaryService.Save(summaryId, request);
+            var result = await _summaryService.Save(request);
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Failed to save.");
