@@ -83,6 +83,17 @@ public class SummaryController : ControllerBase
         return Ok(result.Data);
     }
 
+    [HttpPost]
+    public async Task<ActionResult<ServiceResult<SummaryResponse>>> EnrollUser([FromBody] SummaryMatriculationRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _summaryService.EnrollUser(request, cancellationToken);
+
+        if (!result.Success)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
+
     [HttpPost("/byai")]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> MakeSummary([FromBody] SummaryCreationRequest request, CancellationToken cancellationToken)
     {

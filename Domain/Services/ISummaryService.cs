@@ -14,4 +14,5 @@ public interface ISummaryService
     Task<ServiceResult<string>> Save(SummaryRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<string>> Update(string summaryId, SummaryRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<string>> RequestCreationToAI(SummaryCreationRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<SummaryResponse>> EnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default);
 }
