@@ -5,6 +5,7 @@ using FluentAssertions;
 using IAcademy.Test.Shared.Builders;
 using Moq;
 using Service;
+using System.Security.Cryptography;
 
 namespace IAcademy.Test.Unit.Services
 {
@@ -73,13 +74,40 @@ namespace IAcademy.Test.Unit.Services
         [Fact]
         public async Task Update_SHOULD_Return_Success_WHEN_Update_Is_Successful()
         {
-            var configurationRequest = new ConfigurationRequest();
+            var configurationRequest = new ConfigurationRequest()
+            {
+                Summary = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build(),
+                FirstContent = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build(),
+                NewContent = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build(),
+                Exercise = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build(),
+                Correction = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build(),
+                Pendency = new InputPropertiesBuilder()
+                .WithInitialInput("new")
+                .WithFinalInput("new")
+                .Build()
+            };
+
             var existingConfiguration = new ConfigurationBuilder().Build();
 
             _repositoryMock.Setup(r => r.Get(existingConfiguration.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingConfiguration);
 
-            _repositoryMock.Setup(r => r.Update(existingConfiguration.Id, existingConfiguration, It.IsAny<CancellationToken>()))
+            _repositoryMock.Setup(r => r.Update(existingConfiguration.Id, configurationRequest, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             var result = await _service.Update(existingConfiguration.Id, configurationRequest);
@@ -110,7 +138,7 @@ namespace IAcademy.Test.Unit.Services
             _repositoryMock.Setup(r => r.Get(existingConfiguration.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(existingConfiguration);
 
-            _repositoryMock.Setup(r => r.Update(existingConfiguration.Id, existingConfiguration, It.IsAny<CancellationToken>()))
+            _repositoryMock.Setup(r => r.Update(existingConfiguration.Id, configurationRequest, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             var result = await _service.Update(existingConfiguration.Id, configurationRequest);
