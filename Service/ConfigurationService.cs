@@ -67,7 +67,7 @@ public class ConfigurationService : IConfigurationService
                 ErrorMessage = "Configuration not finded."
             };
 
-        var isSuccess = await _repository.Update(configurationId, existingConfiguration, cancellationToken);
+        var isSuccess = await _repository.Update(configurationId, configuration, cancellationToken);
 
         return new()
         {
