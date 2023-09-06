@@ -315,14 +315,72 @@ namespace IAcademy.Test.Unit.Services
                     .Build()
                 );
 
-            _mockSummaryRepository.Setup(m => m.Save(It.IsAny<Summary>(), default)).ReturnsAsync(true);
+            _mockSummaryRepository.Setup(m => m.Save(It.IsAny<Summary>(), default))
+                .ReturnsAsync(true);
 
             var result = await _summaryService.RequestCreationToAI(request);
 
             result.Success.Should().BeTrue();
         }
 
+        [Fact]
+        public async Task EnrollUser_SHOULD_Returns_Fail_WHEN_SummaryNotFound()
+        {
+            var request = new SummaryMatriculationRequest()
+            {
+                OwnerId = "ownerId",
+                SummaryId = "summaryId"
+            };
 
+            var result = await _summaryService.EnrollUser(request);
 
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().Be("Summary not found.");
+        }
+
+        [Fact]
+        public async Task EnrollUser_SHOULD_Returns_Fail_WHEN_Summary_OwnerId_Is_Not_Default()
+        {
+            var request = new SummaryMatriculationRequest()
+            {
+                OwnerId = "ownerId",
+                SummaryId = "summaryId"
+            };
+
+            var repositoryResult = new SummaryBuilder().Build();
+
+            _mockSummaryRepository.Setup(m => m.Get(It.IsAny<string>(), default))
+                .ReturnsAsync(repositoryResult);
+
+            var result = await _summaryService.EnrollUser(request);
+
+            result.Success.Should().BeFalse();
+            result.ErrorMessage.Should().Be("This summary is not master.");
+        }
+
+        [Fact]
+        public async Task EnrollUser_SHOULD_Returns_Success_WHEN_Summary_OwnerId_Is_Default()
+        {
+            var request = new SummaryMatriculationRequest()
+            {
+                OwnerId = "userId",
+                SummaryId = "iacademy"
+            };
+
+            var repositoryResult = new SummaryBuilder()
+                .WithOwnerId("iacademy")
+                .Build();
+
+            _mockSummaryRepository.Setup(m => m.Get(It.IsAny<string>(), default))
+                .ReturnsAsync(repositoryResult);
+
+            _mockSummaryRepository.Setup(m => m.Save(It.IsAny<Summary>(), default))
+                .ReturnsAsync(true);
+
+            var result = await _summaryService.EnrollUser(request);
+
+            result.Success.Should().BeTrue();
+            result.Data.Should().NotBe(repositoryResult.Id);
+        }
     }
 }

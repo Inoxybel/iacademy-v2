@@ -315,6 +315,9 @@ public class ContentService : IContentService
 
         var newContent = openAIResponse.Choices.First().Message.Content.Deserialize<Content>();
 
+        if (!newContent.Body.Any())
+            newContent = openAIResponse.Choices.First().Message.Content.Deserialize<Content>(true);
+
         var newBody = MakeNewContentList(content.Body, newContent.Body);
 
         content.Body = newBody;

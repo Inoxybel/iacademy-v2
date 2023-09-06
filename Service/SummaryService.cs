@@ -1,4 +1,5 @@
 ﻿using Domain.DTO;
+using Domain.DTO.Exercise;
 using Domain.DTO.Summary;
 using Domain.Entities;
 using Domain.Infra;
@@ -235,6 +236,35 @@ public class SummaryService : ISummaryService
         };
     }
 
+    public async Task<ServiceResult<SummaryResponse>> EnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default)
+    {
+        var summary = await _repository.Get(request.SummaryId, cancellationToken);
+
+        if (summary is null)
+            return GetFailResponse("Summary not found.");
+
+        if(!summary.OwnerId.Equals("iacademy"))
+            return GetFailResponse("This summary is not master.");
+
+        summary.OriginId = summary.Id;
+        summary.OwnerId = request.OwnerId;
+        summary.Id = Guid.NewGuid().ToString();
+
+        var repositoryResponse = await _repository.Save(summary, cancellationToken);
+
+        if (repositoryResponse)
+            return new()
+            {
+                Success = true,
+                Data = new()
+                {
+                    Id = summary.Id
+                }
+            };
+
+        return GetFailResponse("Fail to enroll user, try again.");
+    }
+
     private static List<Topic> MapTopicsFromResponse(OpenAIResponse response)
     {
         var completeResponse = response.Choices.First().Message.Content;
@@ -254,4 +284,10 @@ public class SummaryService : ISummaryService
 
         return new();
     }
+
+    private static ServiceResult<SummaryResponse> GetFailResponse(string message) => new()
+    {
+        Success = false,
+        ErrorMessage = message
+    };
 }
