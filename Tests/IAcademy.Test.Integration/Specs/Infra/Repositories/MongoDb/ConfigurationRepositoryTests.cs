@@ -1,4 +1,5 @@
-﻿using Domain.Infra;
+﻿using Domain.DTO.Configuration;
+using Domain.Infra;
 using FluentAssertions;
 using IAcademy.Test.Integration.Base;
 using IAcademy.Test.Integration.Configuration;
@@ -52,32 +53,33 @@ public class ConfigurationRepositoryTests : IntegrationTestBase
 
         await _fixture.DbContext.Configuration.InsertOneAsync(oldConfiguration);
 
-        var newConfiguration = new ConfigurationBuilder()
-            .WithNewContent(new InputPropertiesBuilder()
+        var newConfiguration = new ConfigurationRequest()
+        {
+            Summary = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .WithFirstContent(new InputPropertiesBuilder()
+                .Build(),
+            FirstContent = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .WithCorrection(new InputPropertiesBuilder()
+                .Build(),
+            NewContent = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .WithPendency(new InputPropertiesBuilder()
+                .Build(),
+            Exercise = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .WithSummary(new InputPropertiesBuilder()
+                .Build(),
+            Correction = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .WithExercise(new InputPropertiesBuilder()
+                .Build(),
+            Pendency = new InputPropertiesBuilder()
                 .WithInitialInput("new")
                 .WithFinalInput("new")
-                .Build())
-            .Build();
+                .Build()
+        };
 
         var filter = Builders<ConfigurationEntity>.Filter.Eq(c => c.Id, oldConfiguration.Id);
         var document = _fixture.DbContext.Configuration.FindSync(filter).FirstOrDefault();
