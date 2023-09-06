@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.DTO.Configuration;
+using Domain.Entities;
 using Domain.Infra;
 using MongoDB.Driver;
 
@@ -32,7 +33,7 @@ public class ConfigurationRepository : IConfigurationRepository
         }
     }
 
-    public async Task<bool> Update(string configurationId, Configuration configuration, CancellationToken cancellationToken = default)
+    public async Task<bool> Update(string configurationId, ConfigurationRequest configuration, CancellationToken cancellationToken = default)
     {
         try
         {
