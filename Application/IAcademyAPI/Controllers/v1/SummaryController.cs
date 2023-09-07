@@ -83,7 +83,7 @@ public class SummaryController : ControllerBase
         return Ok(result.Data);
     }
 
-    [HttpPost]
+    [HttpPost("/enroll")]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> EnrollUser([FromBody] SummaryMatriculationRequest request, CancellationToken cancellationToken)
     {
         var result = await _summaryService.EnrollUser(request, cancellationToken);
