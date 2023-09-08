@@ -26,17 +26,6 @@ public class CorrectionController : ControllerBase
         return Ok(result.Data);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> MakeCorrection([FromRoute] string exerciseId, [FromBody] CreateCorrectionRequest request)
-    {
-        var result = await _service.MakeCorrection(exerciseId, request);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
-    }
-
     [HttpPut("{correctionId}")]
     public async Task<IActionResult> Update([FromRoute] string correctionId, [FromBody] CorrectionUpdateRequest correction)
     {

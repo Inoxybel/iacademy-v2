@@ -60,28 +60,6 @@ public class ContentController : ControllerBase
         return Ok(result.Data);
     }
 
-    [HttpPost("byai/summary/{summaryId}")]
-    public async Task<IActionResult> RequestContentCreationToAI([FromRoute] string summaryId, [FromBody] AIContentCreationRequest request, CancellationToken cancellationToken = default)
-    {
-        var result = await _contentService.MakeContent(summaryId, request, cancellationToken);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
-    }
-
-    [HttpPost("{contentId}/new-content")]
-    public async Task<IActionResult> MakeNewAlternativeContent(string contentId, CancellationToken cancellationToken = default)
-    {
-        var result = await _contentService.MakeAlternativeContent(contentId, cancellationToken);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
-    }
-
     [HttpPut("{contentId}")]
     public async Task<IActionResult> Update([FromRoute] string contentId, [FromBody] ContentRequest request, CancellationToken cancellationToken = default)
     {

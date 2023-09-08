@@ -49,17 +49,6 @@ public class ExerciseController : ControllerBase
         return Ok(result.Data);
     }
 
-    [HttpPost("request-exercise-creation/content/{contentId}")]
-    public async Task<IActionResult> RequestExerciseCreation([FromRoute] string contentId, CancellationToken cancellationToken)
-    {
-        var result = await _exerciseService.MakeExercise(contentId, cancellationToken);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
-    }
-
     [HttpPut("{exerciseId}")]
     public async Task<IActionResult> Update([FromRoute] string exerciseId, [FromBody] ExerciseRequest request, CancellationToken cancellationToken)
     {
