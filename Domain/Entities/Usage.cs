@@ -1,6 +1,6 @@
-﻿namespace Service.Integrations.OpenAI.DTO;
+﻿namespace Domain.Entities;
 
-public class UsageDTO
+public class Usage
 {
     public int PromptTokens { get; set; }
     public int CompletionTokens { get; set; }

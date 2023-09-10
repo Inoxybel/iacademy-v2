@@ -50,6 +50,7 @@ public static class AppConfiguration
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<ICorrectionRepository, CorrectionRepository>();
         services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
+        services.AddScoped<IChatCompletionsRepository, ChatCompletionsRepository>();
 
         services.AddSingleton<DbContext>();
 

@@ -1,4 +1,5 @@
-﻿using Service.Integrations.OpenAI.DTO;
+﻿using Domain.Entities;
+using Service.Integrations.OpenAI.DTO;
 
 namespace IAcademy.Test.Shared.Builders
 {
@@ -14,10 +15,10 @@ namespace IAcademy.Test.Shared.Builders
             Object = "defaultObject",
             Created = "defaultCreated",
             Model = "defaultModel",
-            Usage = new UsageDTOBuilder().Build(),
+            Usage = new UsageBuilder().Build(),
             Choices = new()
             {
-                new ChoicesDTOBuilder().Build()
+                new ChoicesBuilder().Build()
             }
         };
 
@@ -45,13 +46,13 @@ namespace IAcademy.Test.Shared.Builders
             return this;
         }
 
-        public OpenAIResponseBuilder WithUsage(UsageDTO usage)
+        public OpenAIResponseBuilder WithUsage(Usage usage)
         {
             response.Usage = usage;
             return this;
         }
 
-        public OpenAIResponseBuilder WithChoices(List<ChoicesDTO> choices)
+        public OpenAIResponseBuilder WithChoices(List<Choices> choices)
         {
             response.Choices = choices;
             return this;

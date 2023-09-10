@@ -201,10 +201,10 @@ namespace IAcademy.Test.Unit.Services
             var content = new ContentBuilder().Build();
             var config = new ConfigurationBuilder().Build();
             var openAIResponse = new OpenAIResponseBuilder()
-                .WithChoices(new List<ChoicesDTO>()
+                .WithChoices(new List<Choices>()
                 {
-                    new ChoicesDTOBuilder()
-                    .WithMessage(new MessageDTOBuilder()
+                    new ChoicesBuilder()
+                    .WithMessage(new MessageBuilder()
                         .WithContent(
                             "[{\"Identification\":1,\"Type\":0,\"Question\":\"Which are the prime numbers?\"," +
                             "\"Complementation\":[\"1\",\"2\",\"3\",\"4\"],\"Answer\":\"2,3\"}," +

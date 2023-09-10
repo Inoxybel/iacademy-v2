@@ -6,6 +6,7 @@ public class Summary
     public string OriginId { get; set; }
     public string OwnerId { get; set; }
     public string ConfigurationId { get; set; }
+    public string ChatId { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
     public bool IsAvaliable { get; set; }

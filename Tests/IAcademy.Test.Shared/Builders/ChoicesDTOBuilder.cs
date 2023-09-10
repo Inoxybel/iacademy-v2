@@ -1,38 +1,38 @@
-﻿using Service.Integrations.OpenAI.DTO;
+﻿using Domain.Entities;
 
 namespace IAcademy.Test.Shared.Builders
 {
-    public class ChoicesDTOBuilder
+    public class ChoicesBuilder
     {
-        private ChoicesDTO choice;
+        private Choices choice;
 
-        public ChoicesDTOBuilder() => choice = CreateDefault();
+        public ChoicesBuilder() => choice = CreateDefault();
 
-        private static ChoicesDTO CreateDefault() => new()
+        private static Choices CreateDefault() => new()
         { 
-            Message = new MessageDTOBuilder().Build(), 
+            Message = new MessageBuilder().Build(), 
             FinishReason = "defaultFinishReason", 
             Index = 0 
         };
 
-        public ChoicesDTOBuilder WithMessage(MessageDTO message)
+        public ChoicesBuilder WithMessage(Message message)
         {
             choice.Message = message;
             return this;
         }
 
-        public ChoicesDTOBuilder WithFinishReason(string reason)
+        public ChoicesBuilder WithFinishReason(string reason)
         {
             choice.FinishReason = reason;
             return this;
         }
 
-        public ChoicesDTOBuilder WithIndex(int index)
+        public ChoicesBuilder WithIndex(int index)
         {
             choice.Index = index;
             return this;
         }
 
-        public ChoicesDTO Build() => choice;
+        public Choices Build() => choice;
     }
 }

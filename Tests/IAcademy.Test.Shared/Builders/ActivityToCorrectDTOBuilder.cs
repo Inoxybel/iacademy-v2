@@ -10,7 +10,7 @@ namespace IAcademy.Test.Shared.Builders
 
         private static ActivityToCorrectDTO CreateDefault() => new()
         {
-            Identification = 0,
+            Identification = 1,
             Answer = "DefaultAnswer"
         };
 

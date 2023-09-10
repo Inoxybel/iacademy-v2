@@ -7,6 +7,7 @@ using Service;
 using FluentAssertions;
 using Service.Integrations.OpenAI.DTO;
 using IAcademy.Test.Shared.Builders;
+using CrossCutting.Enums;
 
 namespace IAcademy.Test.Unit.Services;
 
@@ -98,19 +99,44 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToUpdateExercise()
     {
-        var exercise = new Exercise();
+        var exercise = new ExerciseBuilder().Build();
+
         _mockExerciseRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(exercise);
 
         _mockExerciseRepository.Setup(x => x.Update(It.IsAny<string>(), It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var request = new CreateCorrectionRequest();
+        var request = new CreateCorrectionRequest()
+        {
+            Exercises = new List<ActivityToCorrectDTO>()
+            {
+                new ActivityToCorrectDTOBuilder().Build()
+            }
+        };
 
         var result = await correctionService.MakeCorrection("exerciseId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to update exercise.");
+    }
+
+    [Fact]
+    public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_ExerciseStatus_Is_Not_Equal_WaitingToDo()
+    {
+        var exercise = new ExerciseBuilder()
+            .WithStatus(ExerciseStatus.WaitingCorrection)
+            .Build();
+
+        _mockExerciseRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exercise);
+
+        var request = new CreateCorrectionRequest();
+
+        var result = await correctionService.MakeCorrection(exercise.Id, request);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("There is already a correction process for this exercise.");
     }
 
     [Fact]
@@ -124,7 +150,13 @@ public class CorrectionServiceTests
         _mockExerciseRepository.Setup(x => x.Update(It.IsAny<string>(), It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var request = new CreateCorrectionRequest();
+        var request = new CreateCorrectionRequest()
+        {
+            Exercises = new List<ActivityToCorrectDTO>()
+            {
+                new ActivityToCorrectDTOBuilder().Build()
+            }
+        };
 
         var result = await correctionService.MakeCorrection(exercise.Id, request);
 
@@ -169,13 +201,13 @@ public class CorrectionServiceTests
         var openAIResponse = new OpenAIResponseBuilder()
             .WithChoices(new()
             {
-                new ChoicesDTOBuilder()
-                    .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                    .WithMessage(new MessageBuilder()
                         .WithContent(
                             $"{{\"Id\":\"12345\",\"ExerciseId\":\"exercise123\",\"OwnerId\":\"owner789\",\"CreatedDate\":" +
                             $"\"2023-09-01T12:34:56.789Z\",\"UpdatedDate\":\"2023-09-01T13:34:56.789Z\",\"Corrections\":" +
                             $"[{{\"Identification\":1,\"Question\":\"What is the capital of France?\",\"Complementation\":" +
-                            $"[\"Hint: It's known as the city of love.\"],\"Asnwer\":\"Paris\",\"IsCorrect\":true,\"Feedback\":" +
+                            $"[\"Hint: It's known as the city of love.\"],\"Answer\":\"Paris\",\"IsCorrect\":true,\"Feedback\":" +
                             $"\"Correct answer!\"}}]}}"
                         )
                         .Build()
@@ -224,13 +256,13 @@ public class CorrectionServiceTests
         var openAIResponse = new OpenAIResponseBuilder()
             .WithChoices(new()
             {
-                new ChoicesDTOBuilder()
-                    .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                    .WithMessage(new MessageBuilder()
                         .WithContent(
                             $"{{\"Id\":\"12345\",\"ExerciseId\":\"exercise123\",\"OwnerId\":\"owner789\",\"CreatedDate\":" +
                             $"\"2023-09-01T12:34:56.789Z\",\"UpdatedDate\":\"2023-09-01T13:34:56.789Z\",\"Corrections\":" +
                             $"[{{\"Identification\":1,\"Question\":\"What is the capital of France?\",\"Complementation\":" +
-                            $"[\"Hint: It's known as the city of love.\"],\"Asnwer\":\"Brasilandia\",\"IsCorrect\":false,\"Feedback\":" +
+                            $"[\"Hint: It's known as the city of love.\"],\"Answer\":\"Brasilandia\",\"IsCorrect\":false,\"Feedback\":" +
                             $"\"Correct answer!\"}}]}}"
                         )
                         .Build()

@@ -1,6 +1,6 @@
-﻿namespace Service.Integrations.OpenAI.DTO;
+﻿namespace Domain.Entities;
 
-public class MessageDTO
+public class Message
 {
     public string Role { get; set; }
     public string Content { get; set; }

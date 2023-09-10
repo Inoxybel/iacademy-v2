@@ -1,38 +1,38 @@
-﻿using Service.Integrations.OpenAI.DTO;
+﻿using Domain.Entities;
 
 namespace IAcademy.Test.Shared.Builders
 {
-    public class UsageDTOBuilder
+    public class UsageBuilder
     {
-        private UsageDTO usage;
+        private Usage usage;
 
-        public UsageDTOBuilder() => usage = CreateDefault();
+        public UsageBuilder() => usage = CreateDefault();
 
-        private static UsageDTO CreateDefault() => new()
+        private static Usage CreateDefault() => new()
         { 
             PromptTokens = 0, 
             CompletionTokens = 0, 
             TotalTokens = 0 
         };
 
-        public UsageDTOBuilder WithPromptTokens(int tokens)
+        public UsageBuilder WithPromptTokens(int tokens)
         {
             usage.PromptTokens = tokens;
             return this;
         }
 
-        public UsageDTOBuilder WithCompletionTokens(int tokens)
+        public UsageBuilder WithCompletionTokens(int tokens)
         {
             usage.CompletionTokens = tokens;
             return this;
         }
 
-        public UsageDTOBuilder WithTotalTokens(int tokens)
+        public UsageBuilder WithTotalTokens(int tokens)
         {
             usage.TotalTokens = tokens;
             return this;
         }
 
-        public UsageDTO Build() => usage;
+        public Usage Build() => usage;
     }
 }

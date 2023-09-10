@@ -1,5 +1,4 @@
 ﻿using Domain.DTO;
-using Domain.DTO.Exercise;
 using Domain.DTO.Summary;
 using Domain.Entities;
 using Domain.Infra;
@@ -15,15 +14,18 @@ public class SummaryService : ISummaryService
     private readonly ISummaryRepository _repository;
     private readonly IConfigurationService _configurationService;
     private readonly IOpenAIService _openAIService;
+    private readonly IChatCompletionsService _chatCompletionsService;
 
     public SummaryService(
         ISummaryRepository repository,
         IConfigurationService configurationService,
-        IOpenAIService openAIService)
+        IOpenAIService openAIService,
+        IChatCompletionsService chatCompletionsService)
     {
         _repository = repository;
         _configurationService = configurationService;
         _openAIService = openAIService;
+        _chatCompletionsService = chatCompletionsService;
     }
 
     public async Task<ServiceResult<Summary>> Get(string id, CancellationToken cancellationToken = default)
@@ -150,6 +152,15 @@ public class SummaryService : ISummaryService
                 ErrorMessage = "Failed to get OPENAI response"
             };
 
+        var chatCompletionResult = await _chatCompletionsService.Save(openAIResponse, cancellationToken);
+
+        if (!chatCompletionResult.Success)
+            return new()
+            {
+                Success = false,
+                ErrorMessage = "Failed to save OpenAI response"
+            };
+
         var summary = new Summary
         {
             Id = Guid.NewGuid().ToString(),
@@ -157,6 +168,7 @@ public class SummaryService : ISummaryService
             Subcategory = request.Subcategory,
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
+            ChatId = chatCompletionResult.Data,
             CreatedDate = DateTime.UtcNow,
             Theme = request.Theme,
             Topics = MapTopicsFromResponse(openAIResponse)
@@ -185,6 +197,7 @@ public class SummaryService : ISummaryService
             Id = Guid.NewGuid().ToString(),
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
+            ChatId = request.ChatId,
             CreatedDate = DateTime.UtcNow,
             IsAvaliable = request.IsAvaliable,
             Category = request.Category,
@@ -267,20 +280,13 @@ public class SummaryService : ISummaryService
 
     private static List<Topic> MapTopicsFromResponse(OpenAIResponse response)
     {
-        var completeResponse = response.Choices.First().Message.Content;
+        var content = response.Choices.First().Message.Content;
 
-        var startIndex = completeResponse.IndexOf('{');
-        var endIndex = completeResponse.LastIndexOf('}');
+        var objectFromResponse = JsonConvert.DeserializeObject<Summary>(content);
 
-        if (startIndex != -1 && endIndex != -1)
-        {
-            var extractedJson = completeResponse.Substring(startIndex, endIndex - startIndex + 1);
-
-            var objectFromResponse = JsonConvert.DeserializeObject<Summary>(extractedJson);
-
-            if (objectFromResponse is not null)
-                return objectFromResponse.Topics;
-        }
+        if (objectFromResponse is not null)
+            return objectFromResponse.Topics;
+       
 
         return new();
     }

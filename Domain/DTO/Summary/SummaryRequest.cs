@@ -10,6 +10,7 @@ public class SummaryRequest
     public string OwnerId { get; set; }
     [Required]
     public string ConfigurationId { get; set; }
+    public string ChatId { get; set; }
     public bool IsAvaliable { get; set; }
     [Required]
     public string Category { get; set; }

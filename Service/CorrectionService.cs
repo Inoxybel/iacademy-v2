@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Service.Integrations.OpenAI.DTO;
 using Service.Integrations.OpenAI.Extensions;
 using Service.Integrations.OpenAI.Interfaces;
+using System.Text;
 
 namespace Service;
 
@@ -50,7 +51,12 @@ public class CorrectionService : ICorrectionService
         if (exerciseRecovered is null)
             return GetFailResponse("Failed to get exercise.");
 
+        if (exerciseRecovered.Status != ExerciseStatus.WaitingToDo)
+            return GetFailResponse("There is already a correction process for this exercise.");
+
         exerciseRecovered.Status = ExerciseStatus.WaitingCorrection;
+
+        SaveAnswers(request.Exercises, exerciseRecovered.Exercises);
 
         var updateExerciseResult = await _exerciseRepository.Update(exerciseId, exerciseRecovered, cancellationToken);
 
@@ -62,7 +68,7 @@ public class CorrectionService : ICorrectionService
         if (configurationRecovered is null)
             return GetFailResponse("Failed to get configurations.");
 
-        var correction = await GetCorrectionFromOpenAI(request.Exercises, exerciseRecovered.Exercises, configurationRecovered.Correction);
+        var correction = await GetCorrectionFromOpenAI(exerciseRecovered.Exercises, configurationRecovered.Correction);
 
         if (correction.Corrections is null || !correction.Corrections.Any())
             return GetFailResponse("Failed to deserialize IA response");
@@ -85,7 +91,7 @@ public class CorrectionService : ICorrectionService
 
         if (incorrectExercises.Any())
         {
-            var oldExercises = incorrectExercises.Serialize();
+            var oldExercises = MakePendencyRequest(incorrectExercises);
 
             var pendencyExercise = await RequestPendencyExercicesToAI(oldExercises, configurationRecovered.Pendency);
 
@@ -172,49 +178,96 @@ public class CorrectionService : ICorrectionService
     };
 
     private async Task<Correction> GetCorrectionFromOpenAI(
-        List<ActivityToCorrectDTO> answers,
         List<Activity> exercises,
         InputProperties configurations)
     {
-        var exercisesJson = MakeCorrectionRequest(answers, exercises);
+        var exercisesJson = MakeCorrectionRequest(exercises);
 
-        var message = $"{configurations.InitialInput} {exercisesJson} {configurations.FinalInput} {new Correction().Serialize()}";
+        var message = $"{configurations.InitialInput} \n\n {exercisesJson} \n\n {configurations.FinalInput}";
 
         var response = await _openIAService.DoRequest(message);
 
         if (string.IsNullOrEmpty(response.Id))
             return new Correction();
 
-        var correction = MapCorrectionFromResponse(response);
+        var correction = MapCorrectionFromResponse(response, exercises);
 
         return correction;
     }
 
-    private static string MakeCorrectionRequest(List<ActivityToCorrectDTO> answers, List<Activity> exercises)
+    private static string MakeCorrectionRequest(List<Activity> exercises)
     {
-        exercises.ForEach(a => a.Answer = answers.FirstOrDefault(dto => dto.Identification == a.Identification)?.Answer ?? a.Answer);
+        var resultBuilder = new StringBuilder();
 
-        return exercises.Serialize();
+        foreach (var exercise in exercises)
+        {
+            resultBuilder.AppendLine($"{exercise.Identification} - [{exercise.Type}] {exercise.Question}");
+
+            if (exercise.Complementation.Any())
+            {
+                foreach (var complement in exercise.Complementation)
+                {
+                    resultBuilder.AppendLine(complement);
+                }
+            }
+
+            resultBuilder.AppendLine($"Resposta informada: {exercise.Answer}");
+        }
+
+        return resultBuilder.ToString();
     }
 
-    private static Correction MapCorrectionFromResponse(OpenAIResponse response)
+    private static string MakePendencyRequest(List<CorrectionItem> corrections)
+    {
+        var resultBuilder = new StringBuilder();
+
+        var count = 1;
+
+        foreach (var correctionItem in corrections)
+        {
+            resultBuilder.AppendLine($"{count++} - {correctionItem.Question}");
+
+            if (correctionItem.Complementation.Any())
+            {
+                foreach (var complement in correctionItem.Complementation)
+                {
+                    resultBuilder.AppendLine(complement);
+                }
+            }
+
+            resultBuilder.AppendLine($"Resposta informada: {correctionItem.Answer}");
+        }
+
+        return resultBuilder.ToString();
+    }
+
+    private static void SaveAnswers(List<ActivityToCorrectDTO> answers, List<Activity> exercises)
+    {
+        exercises.ForEach(a => a.Answer = answers.FirstOrDefault(dto => dto.Identification == a.Identification)?.Answer ?? a.Answer);
+    }
+
+    private static Correction MapCorrectionFromResponse(OpenAIResponse response, List<Activity> exercises)
     {
         var completeResponse = response.Choices.First().Message.Content;
 
-        var startIndex = completeResponse.IndexOf('{');
-        var endIndex = completeResponse.LastIndexOf('}');
+        var correction = JsonConvert.DeserializeObject<Correction>(completeResponse);
 
-        if (startIndex != -1 && endIndex != -1)
+        if (correction is null)
+            return new Correction();
+
+        foreach (var correctionItem in correction.Corrections)
         {
-            var extractedJson = completeResponse.Substring(startIndex, endIndex - startIndex + 1);
+            var matchingExercise = exercises.FirstOrDefault(e => e.Identification == correctionItem.Identification);
 
-            var objectFromResponse = JsonConvert.DeserializeObject<Correction>(extractedJson);
-
-            if (objectFromResponse is not null)
-                return objectFromResponse;
+            if (matchingExercise != null)
+            {
+                correctionItem.Question = matchingExercise.Question;
+                correctionItem.Complementation = matchingExercise.Complementation;
+                correctionItem.Answer = matchingExercise.Answer;
+            }
         }
 
-        return new Correction();
+        return correction;
     }
 
     private static Correction CompleteCorrectionAttributes(Correction correction, Exercise exerciseRecovered)

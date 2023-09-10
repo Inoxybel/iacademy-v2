@@ -3,7 +3,6 @@ using Domain.DTO.Content;
 using Domain.DTO.Correction;
 using Domain.DTO.Summary;
 using Domain.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IAcademyAPI.Controllers.v1;

@@ -5,7 +5,6 @@ using FluentAssertions;
 using IAcademy.Test.Shared.Builders;
 using Moq;
 using Service;
-using System.Security.Cryptography;
 
 namespace IAcademy.Test.Unit.Services
 {

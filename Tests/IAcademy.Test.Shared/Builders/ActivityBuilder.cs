@@ -11,7 +11,7 @@ public class ActivityBuilder
 
     private static Activity CreateDefault() => new()
     {
-        Identification = 0,
+        Identification = 1,
         Type = ActivityType.SingleChoice,
         Question = "DefaultQuestion",
         Complementation = new List<string>(),

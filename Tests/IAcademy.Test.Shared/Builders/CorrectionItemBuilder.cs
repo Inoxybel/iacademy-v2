@@ -13,7 +13,7 @@ public class CorrectionItemBuilder
         Identification = 0,
         Question = "DefaultQuestion",
         Complementation = new List<string>(),
-        Asnwer = "DefaultAnswer",
+        Answer = "DefaultAnswer",
         IsCorrect = false,
         Feedback = "DefaultFeedback"
     };
@@ -38,7 +38,7 @@ public class CorrectionItemBuilder
 
     public CorrectionItemBuilder WithAnswer(string answer)
     {
-        correctionItem.Asnwer = answer;
+        correctionItem.Answer = answer;
         return this;
     }
 

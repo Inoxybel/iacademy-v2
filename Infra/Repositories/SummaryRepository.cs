@@ -79,6 +79,7 @@ public class SummaryRepository : ISummaryRepository
                 .Set(s => s.OriginId, summary.OriginId)
                 .Set(s => s.OwnerId, summary.OwnerId)
                 .Set(s => s.ConfigurationId, summary.ConfigurationId)
+                .Set(s => s.ChatId, summary.ChatId)
                 .Set(s => s.IsAvaliable, summary.IsAvaliable)
                 .Set(s => s.Category, summary.Category)
                 .Set(s => s.Subcategory, summary.Subcategory)

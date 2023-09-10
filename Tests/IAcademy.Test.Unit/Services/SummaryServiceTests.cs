@@ -8,7 +8,6 @@ using Moq;
 using Domain.Services;
 using Service.Integrations.OpenAI.Interfaces;
 using IAcademy.Test.Shared.Builders;
-using Service.Integrations.OpenAI.DTO;
 
 namespace IAcademy.Test.Unit.Services
 {
@@ -18,17 +17,20 @@ namespace IAcademy.Test.Unit.Services
         private readonly Mock<ISummaryRepository> _mockSummaryRepository;
         private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<IOpenAIService> _mockOpenAIService;
+        private readonly Mock<IChatCompletionsService> _mockChatCompletionsService;
 
         public SummaryServiceTests()
         {
             _mockSummaryRepository = new Mock<ISummaryRepository>();
             _mockConfigurationService = new Mock<IConfigurationService>();
             _mockOpenAIService = new Mock<IOpenAIService>();
+            _mockChatCompletionsService = new Mock<IChatCompletionsService>();
 
             _summaryService = new SummaryService(
                 _mockSummaryRepository.Object,
                 _mockConfigurationService.Object,
-                _mockOpenAIService.Object
+                _mockOpenAIService.Object,
+                _mockChatCompletionsService.Object
             );
         }
 
@@ -291,18 +293,26 @@ namespace IAcademy.Test.Unit.Services
                 .WithConfigurationId(configuration.Id)
                 .Build();
 
-            _mockConfigurationService.Setup(m => m.Get(request.ConfigurationId, default)).ReturnsAsync(new ServiceResult<Configuration>
-            {
-                Success = true,
-                Data = configuration
-            });
+            _mockConfigurationService.Setup(m => m.Get(request.ConfigurationId, default))
+                .ReturnsAsync(new ServiceResult<Configuration>
+                {
+                    Success = true,
+                    Data = configuration
+                });
+
+            _mockChatCompletionsService.Setup(m => m.Save(It.IsAny<ChatCompletion>(), default))
+                .ReturnsAsync(new ServiceResult<string>()
+                {
+                    Success = true,
+                    Data = "chatId"
+                });
 
             _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<string>()))
                 .ReturnsAsync(new OpenAIResponseBuilder()
-                    .WithChoices(new List<ChoicesDTO>()
+                    .WithChoices(new List<Choices>()
                     {
-                        new ChoicesDTOBuilder()
-                            .WithMessage(new MessageDTOBuilder()
+                        new ChoicesBuilder()
+                            .WithMessage(new MessageBuilder()
                                 .WithContent(
                                     "{\"Topics\":[{\"Index\":\"1\",\"Title\":\"Linear Equations\",\"Description\":" +
                                     "\"Introduction to linear equations.\",\"Subtopics\":[{\"Index\":\"1.1\"," +

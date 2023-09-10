@@ -13,6 +13,8 @@ public class DbContext
     public IMongoCollection<Correction> Correction { get; }
     public IMongoCollection<Exercise> Exercise { get; }
 
+    public IMongoCollection<ChatCompletion> ChatCompletion { get; }
+
     protected DbContext() { }
 
     public DbContext(IOptions<DatabaseInstanceOptions> databaseInstanceOptions)
@@ -26,5 +28,6 @@ public class DbContext
         Content = database.GetCollection<Content>(nameof(Content));
         Correction = database.GetCollection<Correction>(nameof(Correction));
         Exercise = database.GetCollection<Exercise>(nameof(Exercise));
+        ChatCompletion = database.GetCollection<ChatCompletion>(nameof(ChatCompletion));
     }
 }

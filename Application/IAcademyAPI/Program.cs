@@ -49,6 +49,7 @@ public class Program
         services.AddScoped<IGeneratorService, GeneratorService>();
         services.AddScoped<ICorrectionService, CorrectionService>();
         services.AddScoped<IConfigurationService, ConfigurationService>();
+        services.AddScoped<IChatCompletionsService, ChatCompletionsService>();
 
         services
             .AddControllers()
@@ -59,6 +60,7 @@ public class Program
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
             
         services.Configure<ApiBehaviorOptions>(options =>

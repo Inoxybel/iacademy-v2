@@ -19,6 +19,7 @@ public class ContentServiceTests
     private readonly Mock<IGeneratorService> _mockExerciseGeneratorService = new();
     private readonly Mock<IOpenAIService> _mockOpenAIService = new();
     private readonly Mock<IConfigurationService> _mockConfigurationService = new();
+    private readonly Mock<IChatCompletionsService> _mockChatCompletionsService = new();
     private readonly ContentService contentService;
 
     public ContentServiceTests()
@@ -28,7 +29,8 @@ public class ContentServiceTests
             _mockSummaryService.Object,
             _mockExerciseGeneratorService.Object,
             _mockOpenAIService.Object,
-            _mockConfigurationService.Object
+            _mockConfigurationService.Object,
+            _mockChatCompletionsService.Object
         );
     }
 
@@ -376,11 +378,19 @@ public class ContentServiceTests
 
         var openAIResponse = new OpenAIResponse();
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
 
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
@@ -415,10 +425,10 @@ public class ContentServiceTests
         };
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
                         "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
@@ -429,11 +439,19 @@ public class ContentServiceTests
             })
             .Build();
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+    .ReturnsAsync(chatCompletionsReturn);
 
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
@@ -468,10 +486,10 @@ public class ContentServiceTests
         };
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
                         "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
@@ -489,11 +507,19 @@ public class ContentServiceTests
             Success = false
         };
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
 
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
@@ -534,10 +560,10 @@ public class ContentServiceTests
         };
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
                         "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
@@ -556,6 +582,11 @@ public class ContentServiceTests
 
         var contentId = "contentId";
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
@@ -571,6 +602,9 @@ public class ContentServiceTests
         _mockContentRepository.SetupSequence(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(contentId)
             .ReturnsAsync(string.Empty);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
 
         var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
 
@@ -602,10 +636,10 @@ public class ContentServiceTests
         };
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
                         "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
@@ -629,11 +663,19 @@ public class ContentServiceTests
             Success = false
         };
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
 
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
@@ -677,10 +719,10 @@ public class ContentServiceTests
         };
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
                         "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
@@ -705,6 +747,11 @@ public class ContentServiceTests
             Data = summaryId
         };
 
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false
+        };
+
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(summaryResponse);
 
@@ -723,11 +770,192 @@ public class ContentServiceTests
         _mockSummaryService.Setup(s => s.Update(It.IsAny<string>(), It.IsAny<SummaryRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(updateSummaryResult);
 
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
+
         var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
 
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNullOrEmpty();
         result.Data.Count().Should().Be(2);
+    }
+
+    [Fact]
+    public async Task MakeContent_SHOULD_Execute_DoRequest_With_ChatCompletions_WHEN_Chat_Was_Founded()
+    {
+        var summaryId = "someSummaryId";
+        var summaryResponse = new ServiceResult<Summary>()
+        {
+            Success = true,
+            Data = new SummaryBuilder()
+                .WithId(summaryId)
+                .Build()
+        };
+
+        var aIContentCreationRequest = new AIContentCreationRequest()
+        {
+            TopicIndex = "1"
+        };
+
+        var configurationResult = new ServiceResult<Configuration>()
+        {
+            Success = true,
+            Data = new ConfigurationBuilder().Build()
+        };
+
+        var openAIResponse = new OpenAIResponseBuilder()
+            .WithChoices(new List<Choices>()
+            {
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
+                    .WithContent(
+                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
+                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                     )
+                    .Build()
+                )
+                .Build()
+            })
+            .Build();
+
+        var makeExerciseResult = new ServiceResult<string>()
+        {
+            Success = true,
+            Data = "exerciseId"
+        };
+
+        var contentId = "someContentId";
+
+        var updateSummaryResult = new ServiceResult<string>()
+        {
+            Success = true,
+            Data = summaryId
+        };
+
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = true,
+            Data = new ChatCompletionsBuilder().Build()
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(summaryResponse);
+
+        _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configurationResult);
+
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()))
+            .ReturnsAsync(openAIResponse);
+
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(makeExerciseResult);
+
+        _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentId);
+
+        _mockSummaryService.Setup(s => s.Update(It.IsAny<string>(), It.IsAny<SummaryRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updateSummaryResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
+
+        var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
+
+        result.Success.Should().BeTrue();
+        result.Data.Should().NotBeNullOrEmpty();
+        result.Data.Count().Should().Be(2);
+
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<string>()),Times.Never);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MakeContent_SHOULD_Execute_DoRequest_Without_ChatCompletions_WHEN_Chat_Wasnt_Founded()
+    {
+        var summaryId = "someSummaryId";
+        var summaryResponse = new ServiceResult<Summary>()
+        {
+            Success = true,
+            Data = new SummaryBuilder()
+                .WithId(summaryId)
+                .Build()
+        };
+
+        var aIContentCreationRequest = new AIContentCreationRequest()
+        {
+            TopicIndex = "1"
+        };
+
+        var configurationResult = new ServiceResult<Configuration>()
+        {
+            Success = true,
+            Data = new ConfigurationBuilder().Build()
+        };
+
+        var openAIResponse = new OpenAIResponseBuilder()
+            .WithChoices(new List<Choices>()
+            {
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
+                    .WithContent(
+                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
+                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                     )
+                    .Build()
+                )
+                .Build()
+            })
+            .Build();
+
+        var makeExerciseResult = new ServiceResult<string>()
+        {
+            Success = true,
+            Data = "exerciseId"
+        };
+
+        var contentId = "someContentId";
+
+        var updateSummaryResult = new ServiceResult<string>()
+        {
+            Success = true,
+            Data = summaryId
+        };
+
+        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
+        {
+            Success = false,
+            ErrorMessage = "Error"
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(summaryResponse);
+
+        _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configurationResult);
+
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
+            .ReturnsAsync(openAIResponse);
+
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(makeExerciseResult);
+
+        _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentId);
+
+        _mockSummaryService.Setup(s => s.Update(It.IsAny<string>(), It.IsAny<SummaryRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updateSummaryResult);
+
+        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chatCompletionsReturn);
+
+        var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
+
+        result.Success.Should().BeTrue();
+        result.Data.Should().NotBeNullOrEmpty();
+        result.Data.Count().Should().Be(2);
+
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<string>()), Times.Once);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -739,10 +967,10 @@ public class ContentServiceTests
             .Build();
 
         var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<ChoicesDTO>()
+            .WithChoices(new List<Choices>()
             {
-                new ChoicesDTOBuilder()
-                .WithMessage(new MessageDTOBuilder()
+                new ChoicesBuilder()
+                .WithMessage(new MessageBuilder()
                     .WithContent(
                         "{\"Theme\":\"Math\",\"SubtopicIndex\":\"1.1\",\"Title\":\"Algebra\"," +
                         "\"Body\":[{\"Content\":\"This isnew  body content\"}]}"

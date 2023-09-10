@@ -5,6 +5,7 @@ using Domain.DTO.Summary;
 using Domain.Entities;
 using Domain.Infra;
 using Domain.Services;
+using Service.Integrations.OpenAI.DTO;
 using Service.Integrations.OpenAI.Interfaces;
 
 namespace Service;
@@ -16,19 +17,22 @@ public class ContentService : IContentService
     private readonly IConfigurationService _configurationService;
     private readonly IGeneratorService _exerciseGeneratorService;
     private readonly ISummaryService _summaryService;
+    private readonly IChatCompletionsService _chatCompletionsService;
 
     public ContentService(
         IContentRepository contentRepository,
         ISummaryService summaryService,
         IGeneratorService exerciseGeneratorService,
         IOpenAIService openAIService,
-        IConfigurationService configurationService)
+        IConfigurationService configurationService,
+        IChatCompletionsService chatCompletionsService)
     {
         _contentRepository = contentRepository;
         _summaryService = summaryService;
         _exerciseGeneratorService = exerciseGeneratorService;
         _openAIService = openAIService;
         _configurationService = configurationService;
+        _chatCompletionsService = chatCompletionsService;
     }
 
     public async Task<ServiceResult<Content>> Get(string id, CancellationToken cancellationToken = default)
@@ -202,10 +206,24 @@ public class ContentService : IContentService
         if (topic is null)
             return MakeErrorResult<List<string>>("Error to find index on topic");
 
-        var topicSummary = $"{topic.Index} {topic.Title}: {string.Join(", ", topic.Subtopics.Select(st => st.Index + " " + st.Title))}";
-        var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, string.Empty, topicSummary);
+        var chatCompletions = await _chatCompletionsService.Get(summary.ChatId, cancellationToken);
 
-        var openAIResponse = await _openAIService.DoRequest(requestString);
+        OpenAIResponse openAIResponse;
+
+        if (chatCompletions.Success)
+        {
+            var requestString = MakeOpenAIFirstContentRequest(configuration.FirstContent, request.TopicIndex);
+
+            openAIResponse = await _openAIService.DoRequest(chatCompletions.Data, requestString);
+        }
+        else
+        {
+            var topicSummary = $"{topic.Index} {topic.Title}: {string.Join(", ", topic.Subtopics.Select(st => st.Index + " " + st.Title))}";
+            
+            var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, string.Empty, topicSummary);
+
+            openAIResponse = await _openAIService.DoRequest(requestString);
+        }
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
             return MakeErrorResult<List<string>>("Error to get OpenAI content create response");
@@ -362,6 +380,13 @@ public class ContentService : IContentService
         newContentList.AddRange(contents.FindAll(b => b.DisabledDate != DateTime.MinValue));
 
         return newContentList;
+    }
+
+    private static string MakeOpenAIFirstContentRequest(InputProperties configuration, string topicIndex)
+    {
+        var request = $"{configuration.InitialInput}: {topicIndex} {configuration.FinalInput}";
+
+        return request;
     }
 
     private static string MakeOpenAIRequest(InputProperties configuration, string theme, string contentTitle, string content)

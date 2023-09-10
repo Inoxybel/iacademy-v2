@@ -1,31 +1,31 @@
-﻿using Service.Integrations.OpenAI.DTO;
+﻿using Domain.Entities;
 
 namespace IAcademy.Test.Shared.Builders
 {
-    public class MessageDTOBuilder
+    public class MessageBuilder
     {
-        private MessageDTO message;
+        private Message message;
 
-        public MessageDTOBuilder() => message = CreateDefault();
+        public MessageBuilder() => message = CreateDefault();
 
-        private static MessageDTO CreateDefault() => new()
+        private static Message CreateDefault() => new()
         {
             Role = "defaultRole",
             Content = "defaultContent"
         };
 
-        public MessageDTOBuilder WithRole(string role)
+        public MessageBuilder WithRole(string role)
         {
             message.Role = role;
             return this;
         }
 
-        public MessageDTOBuilder WithContent(string content)
+        public MessageBuilder WithContent(string content)
         {
             message.Content = content;
             return this;
         }
 
-        public MessageDTO Build() => message;
+        public Message Build() => message;
     }
 }
