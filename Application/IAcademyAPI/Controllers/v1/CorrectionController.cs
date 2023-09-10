@@ -29,6 +29,9 @@ public class CorrectionController : ControllerBase
     [HttpPut("{correctionId}")]
     public async Task<IActionResult> Update([FromRoute] string correctionId, [FromBody] CorrectionUpdateRequest correction)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _service.Update(correctionId, correction);
 
         if (!result.Success)

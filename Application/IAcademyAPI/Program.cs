@@ -1,5 +1,8 @@
 using System.Text.Json.Serialization;
 using Domain.Services;
+using Domain.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using IAcademyAPI.Infra.APIConfigurations;
 using Microsoft.AspNetCore.Mvc;
 using Service;
@@ -52,6 +55,10 @@ public class Program
         services.AddScoped<IChatCompletionsService, ChatCompletionsService>();
 
         services
+            .AddFluentValidationAutoValidation()
+            .AddValidatorsFromAssemblyContaining<SummaryCreationRequestValidator>();
+
+        services
             .AddControllers()
             .ConfigureApiBehaviorOptions(options =>
             {
@@ -62,7 +69,7 @@ public class Program
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-            
+
         services.Configure<ApiBehaviorOptions>(options =>
         {
             options.SuppressModelStateInvalidFilter = true;

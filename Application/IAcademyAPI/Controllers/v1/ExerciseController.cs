@@ -41,6 +41,9 @@ public class ExerciseController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] ExerciseRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _exerciseService.Save(request, cancellationToken);
 
         if (!result.Success)
@@ -52,6 +55,9 @@ public class ExerciseController : ControllerBase
     [HttpPut("{exerciseId}")]
     public async Task<IActionResult> Update([FromRoute] string exerciseId, [FromBody] ExerciseRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _exerciseService.Update(exerciseId, request, cancellationToken);
 
         if (!result.Success)

@@ -41,6 +41,9 @@ public class ContentController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] ContentRequest request, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _contentService.Save(request, cancellationToken);
 
         if (!result.Success)
@@ -52,6 +55,9 @@ public class ContentController : ControllerBase
     [HttpPost("save-all")]
     public async Task<IActionResult> SaveAll([FromBody] List<ContentRequest> contents, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _contentService.SaveAll(contents, cancellationToken);
 
         if (!result.Success)
@@ -63,6 +69,9 @@ public class ContentController : ControllerBase
     [HttpPut("{contentId}")]
     public async Task<IActionResult> Update([FromRoute] string contentId, [FromBody] ContentRequest request, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _contentService.Update(contentId, request, cancellationToken);
 
         if (!result.Success)
@@ -74,6 +83,9 @@ public class ContentController : ControllerBase
     [HttpPut("update-all/summary/{summaryId}")]
     public async Task<IActionResult> UpdateAll(string summaryId, [FromBody] List<Content> contents, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _contentService.UpdateAll(summaryId, contents, cancellationToken);
 
         if (!result.Success)

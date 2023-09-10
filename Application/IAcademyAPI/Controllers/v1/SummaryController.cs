@@ -29,7 +29,7 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("category/{category}")]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategory(string category, bool isAvailable = false, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategory(string category, bool isAvailable = true, CancellationToken cancellationToken = default)
     {
         var result = await _summaryService.GetAllByCategory(category, isAvailable, cancellationToken);
 
@@ -40,7 +40,7 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("category/{category}/subcategory/{subcategory}")]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategoryAndSubcategory(string category, string subcategory, bool isAvailable = false, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategoryAndSubcategory(string category, string subcategory, bool isAvailable = true, CancellationToken cancellationToken = default)
     {
         var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, isAvailable, cancellationToken);
 
@@ -51,7 +51,7 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("owner/{ownerId}")]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByOwnerId(string ownerId, bool isAvailable = false, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByOwnerId(string ownerId, bool isAvailable = true, CancellationToken cancellationToken = default)
     {
         var result = await _summaryService.GetAllByOwnerId(ownerId, isAvailable, cancellationToken);
 
@@ -62,7 +62,7 @@ public class SummaryController : ControllerBase
     }
 
     [HttpGet("subcategory/{subcategory}")]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllBySubcategory(string subcategory, bool isAvailable = false, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllBySubcategory(string subcategory, bool isAvailable = true, CancellationToken cancellationToken = default)
     {
         var result = await _summaryService.GetAllBySubcategory(subcategory, isAvailable, cancellationToken);
 
@@ -75,6 +75,9 @@ public class SummaryController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> Save([FromBody] SummaryRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _summaryService.Save(request, cancellationToken);
 
         if (!result.Success)
@@ -86,6 +89,9 @@ public class SummaryController : ControllerBase
     [HttpPost("enroll")]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> EnrollUser([FromBody] SummaryMatriculationRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _summaryService.EnrollUser(request, cancellationToken);
 
         if (!result.Success)
@@ -97,6 +103,9 @@ public class SummaryController : ControllerBase
     [HttpPut("{summaryId}")]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> Update(string summaryId, [FromBody] SummaryRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _summaryService.Update(summaryId, request, cancellationToken);
 
         if (!result.Success)

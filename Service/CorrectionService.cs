@@ -98,6 +98,7 @@ public class CorrectionService : ICorrectionService
             pendencyExercise.OwnerId = exerciseRecovered.OwnerId;
             pendencyExercise.ConfigurationId = exerciseRecovered.ConfigurationId;
             pendencyExercise.TopicIndex = exerciseRecovered.TopicIndex;
+            pendencyExercise.ContentId = exerciseRecovered.ContentId;
 
             var savePendencyResult = await _exerciseRepository.Save(pendencyExercise, cancellationToken);
 
@@ -168,6 +169,7 @@ public class CorrectionService : ICorrectionService
         Id = oldExercise.Id,
         OwnerId = oldExercise.OwnerId,
         CorrectionId = correctionId,
+        ContentId = oldExercise.ContentId,
         ConfigurationId = oldExercise.ConfigurationId,
         SendedAt = DateTime.UtcNow,
         Type = oldExercise.Type,

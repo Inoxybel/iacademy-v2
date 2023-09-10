@@ -29,6 +29,9 @@ public class ConfigurationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ConfigurationRequest configurationRequest, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _configurationService.Create(configurationRequest, cancellationToken);
 
         if (!result.Success)
@@ -40,6 +43,9 @@ public class ConfigurationController : ControllerBase
     [HttpPut("{configurationId}")]
     public async Task<IActionResult> Update(string configurationId, [FromBody] ConfigurationRequest configurationRequest, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _configurationService.Update(configurationId, configurationRequest, cancellationToken);
 
         if (!result.Success)

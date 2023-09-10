@@ -3,7 +3,9 @@ using Domain.DTO.Content;
 using Domain.DTO.Correction;
 using Domain.DTO.Summary;
 using Domain.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace IAcademyAPI.Controllers.v1;
 
@@ -32,6 +34,9 @@ public class AIController : ControllerBase
     [HttpPost("summary/create")]
     public async Task<ActionResult<ServiceResult<SummaryResponse>>> MakeSummary([FromBody] SummaryCreationRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _summaryService.RequestCreationToAI(request, cancellationToken);
 
         if (!result.Success)
@@ -43,6 +48,9 @@ public class AIController : ControllerBase
     [HttpPost("summary/{summaryId}/create-content-by-topic")]
     public async Task<IActionResult> RequestContentCreationToAI([FromRoute] string summaryId, [FromBody] AIContentCreationRequest request, CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _contentService.MakeContent(summaryId, request, cancellationToken);
 
         if (!result.Success)
@@ -76,6 +84,9 @@ public class AIController : ControllerBase
     [HttpPost("exercise/{exerciseId}/request-correction")]
     public async Task<IActionResult> MakeCorrection([FromRoute] string exerciseId, [FromBody] CreateCorrectionRequest request)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var result = await _correctionService.MakeCorrection(exerciseId, request);
 
         if (!result.Success)
