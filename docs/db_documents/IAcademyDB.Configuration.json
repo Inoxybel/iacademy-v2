@@ -1,0 +1,27 @@
+[{
+  "_id": "078df11e-b8ec-420e-8924-d46e1c2c1c32",
+  "summary": {
+    "initialInput": "Crie um plano de estudos detalhado e abrangente sobre o tema ",
+    "finalInput": "Não economize tokens, explore seu máximo. O plano deve abordar todos os aspectos relevantes e necessários para um entendimento profundo do tema e nível. Por favor, entregue o plano em formato JSON minificado, conforme o contrato a seguir:{\"Topics\":[{\"Index\":\"1\",\"Title\":\"Título do Tópico 1\",\"Description\":\"Descrição do Tópico 1\",\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Subtítulo 1.1\"},{\"Index\":\"1.2\",\"Title\":\"Subtítulo 1.2\"}//...(adicione tantos subtópicos quanto necessário)]},{\"Index\":\"2\",\"Title\":\"Título do Tópico 2\",\"Description\":\"Descrição do Tópico 2\",\"Subtopics\":[{\"Index\":\"2.1\",\"Title\":\"Subtítulo 2.1\"}//...(adicione tantos subtópicos quanto necessário)] }//... (adicione tantos tópicos quanto necessário)]} . Por favor, garanta que cada tópico e subtópico seja delineado de acordo com as necessidades específicas do conteúdo, sem um número fixo de subtópicos para cada tópico."
+  },
+  "firstContent": {
+    "initialInput": "Por favor, crie conteúdos educacionais aprofundados para os subtópicos do tópico ",
+    "finalInput": "  ,NÃO ECONOMIZE TOKENS, use seu limite de 8K, fornecendo informações detalhadas, exemplos práticos, e dicas úteis para cada um .Por favor, entregue o conteúdo de estudo em formato JSON minificado, conforme o contrato a seguir: {Subtopics:[{Index:\"1.1\",Title:\"title\",Content:\"content},{Index:\"1.2\",Title:\"title\",Content:\"content}]}\"}//...(adicione os demais subtópicos até o último)]}]}."
+  },
+  "newContent": {
+    "initialInput": "Gere o conteúdo didático alternativo referente ao tema - tópico - conteudo alteriormente gerado: ",
+    "finalInput": "A resposta da solicitação deve ser enviada como um objeto JSON com a técnica de minifying respeitando o seguinte contrato: {TopicIndex:\"X.X\",Title:\"subtopic title\",Body:[{Content:\"content\"}]}"
+  },
+  "exercise": {
+    "initialInput": "Gere exercícios relevantes para o seguinte conteúdo didático:",
+    "finalInput": "A resposta da solicitação deve ser enviada como um objeto JSON com a técnica de minifying respeitando o seguinte contrato: {Exercises:[{Identification:1,Type:0,Question:\"question\",Complementation:[]},{Identification:2,Type:1,Question:\"question\",Complementation:[\"a - alternative\",\"b - alternative\", \"c - alternative\"]}]} onde o Type pode ser: 0 - MultipleChoice (pode selecionar mais de uma alternativa, tipo exercício de verdadeiro e falso), 1 - SingleChoice (pode selecionar apenas uma alternativa), 2 - Code (tem que ser respondido um script, código, algotírmo, etc). Os exercícios de escolhas devem ter pelo menos 5 opções armazenadas na lista Complementation. Os pesos de preferência de tipo de exercício são: 2 - 45, 1 - 35, 0 - 20. Devem ser gerados 3 exercícios relevantes para o aprendizado do conteúdo informado."
+  },
+  "correction": {
+    "initialInput": "Baseado nos exercícios e respostas a seguir:",
+    "finalInput": "Faça a correção de cada um dos exercícios, sinalizando se está completamente correta ou não (não existe opção de parcialmente correto, nesse caso é considerado errado) e fornecendo o feedback. A resposta dessa solicitação deve ser enviada como um objeto JSON com a técnica de minifying respeitando o seguinte contrato: {Corrections:[{Identification: 1, IsCorrect:true, Feedback:\"feedback\"},{Identification: 2, IsCorrect:false, Feedback:\"feedback\"}]}"
+  },
+  "pendency": {
+    "initialInput": "Baseado nos exercícios gerados e respostas erradas a seguir:",
+    "finalInput": "Crie a mesma quantidade de novos exercícios diferentes mas que exercitem/avaliem o mesmo assunto/tema. A resposta da solicitação deve ser enviada como um objeto JSON com a técnica de minifying respeitando o seguinte contrato: {Exercises:[{Identification:1,Type:0,Question:\"question\",Complementation:[]},{Identification:2,Type:1,Question:\"question\",Complementation:[\"a - alternative\",\"b - alternative\", \"c - alternative\"]}]} onde o Type pode ser: 0 - MultipleChoice (pode selecionar mais de uma alternativa, tipo exercício de verdadeiro e falso), 1 - SingleChoice (pode selecionar apenas uma alternativa), 2 - Code (tem que ser respondido um script, código, algotírmo, etc). Os exercícios de escolhas devem ter pelo menos 5 opções armazenadas na lista Complementation. Os pesos de preferência de tipo de exercício são: 2 - 40, 1 - 30, 0 - 20. Devem ser gerados a mesma quantidade de exercícios relevantes para o aprendizado do conteúdo informado."
+  }
+}]

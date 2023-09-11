@@ -12,7 +12,7 @@ public class SubtopicBuilder
     {
         Index = "1.1",
         Title = "Title",
-        ContentId = Guid.NewGuid().ToString()
+        ContentId = "DefaultContentId"
     };
 
     public SubtopicBuilder WithIndex(string index)

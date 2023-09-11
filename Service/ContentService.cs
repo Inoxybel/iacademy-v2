@@ -17,6 +17,7 @@ public class ContentService : IContentService
     private readonly IConfigurationService _configurationService;
     private readonly IGeneratorService _exerciseGeneratorService;
     private readonly ISummaryService _summaryService;
+    private readonly IExerciseService _exerciseService;
     private readonly IChatCompletionsService _chatCompletionsService;
 
     public ContentService(
@@ -25,6 +26,7 @@ public class ContentService : IContentService
         IGeneratorService exerciseGeneratorService,
         IOpenAIService openAIService,
         IConfigurationService configurationService,
+        IExerciseService exerciseService,
         IChatCompletionsService chatCompletionsService)
     {
         _contentRepository = contentRepository;
@@ -32,6 +34,7 @@ public class ContentService : IContentService
         _exerciseGeneratorService = exerciseGeneratorService;
         _openAIService = openAIService;
         _configurationService = configurationService;
+        _exerciseService = exerciseService;
         _chatCompletionsService = chatCompletionsService;
     }
 
@@ -79,7 +82,7 @@ public class ContentService : IContentService
             OwnerId = request.OwnerId,
             SummaryId = request.SummaryId,
             ConfigurationId = request.ConfigurationId,
-            ExerciceId = request.ExerciceId,
+            ExerciseId = request.ExerciseId,
             Theme = request.Theme,
             SubtopicIndex = request.SubtopicIndex,
             Title = request.Title,
@@ -122,7 +125,7 @@ public class ContentService : IContentService
                 OwnerId = content.OwnerId,
                 SummaryId = content.SummaryId,
                 ConfigurationId = content.ConfigurationId,
-                ExerciceId = content.ExerciceId,
+                ExerciseId = content.ExerciseId,
                 Theme = content.Theme,
                 SubtopicIndex = content.SubtopicIndex,
                 Title = content.Title,
@@ -267,7 +270,7 @@ public class ContentService : IContentService
             if (!makeExerciseResult.Success)
                 return MakeErrorResult<List<string>>("Error to make exercise");
 
-            newContent.ExerciceId = makeExerciseResult.Data;
+            newContent.ExerciseId = makeExerciseResult.Data;
 
             saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
@@ -350,6 +353,141 @@ public class ContentService : IContentService
             Success = true,
             Data = contentId
         };
+    }
+
+    public async Task<ServiceResult<string>> CopyContentsToEnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default)
+    {
+        var summaryServiceResponse = await _summaryService.Get(request.SummaryId, cancellationToken);
+
+        if (!summaryServiceResponse.Success)
+            return MakeErrorResult<string>("Summary not found.");
+
+        var summary = summaryServiceResponse.Data;
+
+        if (!summary.OwnerId.Equals("iacademy"))
+            return MakeErrorResult<string>("This summary is not master.");
+
+        summary.Id = Guid.NewGuid().ToString();
+        summary.OriginId = request.SummaryId;
+        summary.OwnerId = request.OwnerId;
+
+        var contentIds = summary.Topics
+            .SelectMany(topic => topic.Subtopics)
+            .Where(subtopic => subtopic != null && !string.IsNullOrEmpty(subtopic.ContentId))
+            .Select(subtopic => subtopic.ContentId)
+            .ToList();
+
+        if (!contentIds.Any())
+            return MakeErrorResult<string>("Error to get content ids.");
+
+        var baseContents = await _contentRepository.GetAllByIds(contentIds, cancellationToken);
+
+        if (!baseContents.Any())
+            return MakeErrorResult<string>("Error to get contents.");
+
+        var exerciseIds = baseContents
+            .Where(content => !string.IsNullOrEmpty(content.ExerciseId))
+            .Select(content => content.ExerciseId)
+            .ToList();
+
+        if (!exerciseIds.Any())
+            return MakeErrorResult<string>("Error to get exercise ids.");
+
+        var baseExercises = await _exerciseService.GetAllByIds(exerciseIds, cancellationToken);
+
+        if(!baseExercises.Success)
+            return MakeErrorResult<string>("Error to get exercises.");
+
+        summary = await CreateNewReferences(baseContents, baseExercises.Data, summary);
+
+        var newContentsSaveResult = await _contentRepository.SaveAll(baseContents, cancellationToken);
+
+        if(!newContentsSaveResult.Any())
+            return MakeErrorResult<string>("Error to save new contents.");
+
+        var newExercisesSaveResult = await _exerciseService.SaveAll(baseExercises.Data, cancellationToken);
+
+        if (!newExercisesSaveResult.Success)
+            return MakeErrorResult<string>("Error to save new exercises.");
+
+        var summarySaveRequest = MakeSummaryRequest(summary);
+
+        var summaryRepositoryResponse = await _summaryService.Save(summarySaveRequest, summary.Id, cancellationToken);
+
+        if(!summaryRepositoryResponse.Success)
+            return MakeErrorResult<string>("Fail to enroll user, try again.");
+
+        return new ServiceResult<string>()
+        {
+            Success = summaryRepositoryResponse.Success,
+            Data = summaryRepositoryResponse.Data
+        };
+    }
+
+    private static SummaryRequest MakeSummaryRequest(Summary summary) => new()
+    {
+        OriginId = summary.OriginId,
+        OwnerId = summary.OwnerId,
+        ConfigurationId = summary.ConfigurationId,
+        IsAvaliable = true,
+        Category = summary.Category,
+        Subcategory = summary.Subcategory,
+        Theme = summary.Theme,
+        Topics = summary.Topics
+    };
+
+    private static async Task<Summary> CreateNewReferences(List<Content> baseContents, List<Exercise> baseExercises, Summary summary)
+    {
+        var contentIdMap = baseContents.Where(c => c is not null).ToDictionary(
+            content => content.Id,
+            content => Guid.NewGuid().ToString()
+        );
+
+        var exerciseIdMap = baseExercises.Where(e => e is not null).ToDictionary(
+            exercise => exercise.Id,
+            exercise => Guid.NewGuid().ToString()
+        );
+
+        var reverseExerciseIdMap = baseExercises.Where(e => e is not null && e.ContentId is not null).ToDictionary(
+            exercise => exercise.Id,
+            exercise => contentIdMap.ContainsKey(exercise.ContentId) ? contentIdMap[exercise.ContentId] : null
+        );
+
+        baseContents.ForEach(content =>
+        {
+            if (content is not null)
+            {
+                content.ExerciseId = content.ExerciseId is not null ? exerciseIdMap[content.ExerciseId] : null;
+                content.OwnerId = summary.OwnerId;
+                content.SummaryId = summary.Id;
+                content.Id = contentIdMap[content.Id];
+                content.CreatedDate = DateTime.UtcNow;
+                content.UpdatedDate = DateTime.MinValue;
+            }
+        });
+
+        baseExercises.ForEach(exercise =>
+        {
+            if (exercise is not null)
+            {
+                exercise.ContentId = reverseExerciseIdMap.ContainsKey(exercise.Id) ? reverseExerciseIdMap[exercise.Id] : null;
+                exercise.OwnerId = summary.OwnerId;
+                exercise.Id = exerciseIdMap[exercise.Id];
+            }
+        });
+
+        summary.Topics.ForEach(topic =>
+        {
+            topic.Subtopics.ForEach(subtopic =>
+            {
+                if (subtopic.ContentId is not null && contentIdMap.ContainsKey(subtopic.ContentId))
+                {
+                    subtopic.ContentId = contentIdMap[subtopic.ContentId];
+                }
+            });
+        });
+
+        return summary;
     }
 
     private static ServiceResult<T> MakeErrorResult<T>(string message) => new()

@@ -35,6 +35,28 @@ public class ContentRepositoryTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task ShouldGetAllContents()
+    {
+        var firstContent = new ContentBuilder().Build();
+        var secondContent = new ContentBuilder().Build();
+
+        _fixture.DbContext.Content.InsertMany(new List<Content>()
+        {
+            firstContent,
+            secondContent
+        });
+
+        var result = await _fixture.serviceProvider.GetRequiredService<IContentRepository>().GetAllByIds(new List<string>()
+        {
+            firstContent.Id,
+            secondContent.Id
+        });
+
+        result.Any().Should().BeTrue();
+        result.Count().Should().Be(2);
+    }
+
+    [Fact]
     public async Task ShouldGetAllContentBySummaryId()
     {
         var summaryId = Guid.NewGuid().ToString();
@@ -94,7 +116,7 @@ public class ContentRepositoryTests : IntegrationTestBase
 
         var newContentRequest = new ContentRequestBuilder()
             .WithConfigurationId("New")
-            .WithExerciceId("New")
+            .WithExerciseId("New")
             .WithOwnerId(oldContent.OwnerId)
             .WithSubtopicIndex("New")
             .WithTheme("New")
@@ -110,7 +132,7 @@ public class ContentRepositoryTests : IntegrationTestBase
 
         updatedContent.Should().NotBeNull();
         updatedContent.ConfigurationId.Should().Be(newContentRequest.ConfigurationId);
-        updatedContent.ExerciceId.Should().Be(newContentRequest.ExerciceId);
+        updatedContent.ExerciseId.Should().Be(newContentRequest.ExerciseId);
         updatedContent.OwnerId.Should().Be(newContentRequest.OwnerId);
         updatedContent.SubtopicIndex.Should().Be(newContentRequest.SubtopicIndex);
         updatedContent.Theme.Should().Be(newContentRequest.Theme);
@@ -147,7 +169,7 @@ public class ContentRepositoryTests : IntegrationTestBase
         var updatedFirstContent = _fixture.DbContext.Content.FindSync(c => c.Id == firstContent.Id).FirstOrDefault();
         updatedFirstContent.Should().NotBeNull();
         updatedFirstContent.ConfigurationId.Should().Be(newFirstContent.ConfigurationId);
-        updatedFirstContent.ExerciceId.Should().Be(newFirstContent.ExerciceId);
+        updatedFirstContent.ExerciseId.Should().Be(newFirstContent.ExerciseId);
         updatedFirstContent.OwnerId.Should().Be(newFirstContent.OwnerId);
         updatedFirstContent.SubtopicIndex.Should().Be(newFirstContent.SubtopicIndex);
         updatedFirstContent.Theme.Should().Be(newFirstContent.Theme);
@@ -157,7 +179,7 @@ public class ContentRepositoryTests : IntegrationTestBase
         var updatedSecondContent = _fixture.DbContext.Content.FindSync(c => c.Id == secondContent.Id).FirstOrDefault();
         updatedSecondContent.Should().NotBeNull();
         updatedSecondContent.ConfigurationId.Should().Be(newSecondContent.ConfigurationId);
-        updatedSecondContent.ExerciceId.Should().Be(newSecondContent.ExerciceId);
+        updatedSecondContent.ExerciseId.Should().Be(newSecondContent.ExerciseId);
         updatedSecondContent.OwnerId.Should().Be(newSecondContent.OwnerId);
         updatedSecondContent.SubtopicIndex.Should().Be(newSecondContent.SubtopicIndex);
         updatedSecondContent.Theme.Should().Be(newSecondContent.Theme);

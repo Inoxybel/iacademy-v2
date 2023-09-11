@@ -17,10 +17,13 @@ public class ContentServiceTests
     private readonly Mock<IContentRepository> _mockContentRepository = new();
     private readonly Mock<ISummaryService> _mockSummaryService = new();
     private readonly Mock<IGeneratorService> _mockExerciseGeneratorService = new();
+    private readonly Mock<IExerciseService> _mockExerciseService = new();
     private readonly Mock<IOpenAIService> _mockOpenAIService = new();
     private readonly Mock<IConfigurationService> _mockConfigurationService = new();
     private readonly Mock<IChatCompletionsService> _mockChatCompletionsService = new();
     private readonly ContentService contentService;
+    private readonly SummaryMatriculationRequest _validRequest;
+    private readonly SummaryMatriculationRequest _invalidRequest;
 
     public ContentServiceTests()
     {
@@ -30,8 +33,21 @@ public class ContentServiceTests
             _mockExerciseGeneratorService.Object,
             _mockOpenAIService.Object,
             _mockConfigurationService.Object,
+            _mockExerciseService.Object,
             _mockChatCompletionsService.Object
         );
+
+        _validRequest = new SummaryMatriculationRequest
+        {
+            OwnerId = "iacademy",
+            SummaryId = Guid.NewGuid().ToString()
+        };
+
+        _invalidRequest = new SummaryMatriculationRequest
+        {
+            OwnerId = "Invalid Guid",
+            SummaryId = "Invalid Guid"
+        };
     }
 
     [Fact]
@@ -1047,4 +1063,409 @@ public class ContentServiceTests
         result.ErrorMessage.Should().Contain("Error to get OpenAI response");
     }
 
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_SummaryNotFound()
+    {
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> { Success = false });
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Summary not found.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_SummaryNotMaster()
+    {
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary>
+            {
+                Success = true,
+                Data = new Summary { OwnerId = "some_other_id" }
+            });
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("This summary is not master.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_NoContentIdsFound()
+    {
+        var summary = new Summary
+        {
+            OwnerId = "iacademy",
+            Topics = new List<Topic>
+            {
+                new Topic 
+                { 
+                    Subtopics = new List<Subtopic> 
+                    { 
+                        new Subtopic 
+                        { 
+                            ContentId = null 
+                        } 
+                    } 
+                }
+            }
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> { Success = true, Data = summary });
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to get content ids.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToGetContents()
+    {
+        var summary = new Summary
+        {
+            OwnerId = "iacademy",
+            Topics = new List<Topic>
+            {
+                new Topic 
+                { 
+                    Subtopics = new List<Subtopic> 
+                    { 
+                        new Subtopic 
+                        { 
+                            ContentId = "valid_content_id" 
+                        } 
+                    } 
+                }
+            }
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> { Success = true, Data = summary });
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Content>());
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to get contents.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToGetExerciseIds()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder()
+                .WithExerciseId(null)
+                .Build()
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> { Success = true, Data = summary });
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to get exercise ids.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToGetExercises()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder().Build()
+        };
+
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> { Success = true, Data = summary });
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        _mockExerciseService.Setup(e => e.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<List<Exercise>> { Success = false });
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to get exercises.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToSaveNewContents()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder()
+                .WithId("DefaultContentId")
+                .WithOwnerId("iacademy")
+                .Build()
+        };
+
+        var exercises = new List<Exercise>()
+        {
+            new ExerciseBuilder()
+                .WithId("DefaultExerciseId")
+                .Build()
+        };
+
+        var exerciseGetAllByIdsResponse = new ServiceResult<List<Exercise>>
+        {
+            Success = true,
+            Data = exercises
+        };
+
+        SetupCommonMocks(summary, contents, new List<Exercise>());
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        _mockExerciseService.Setup(e => e.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseGetAllByIdsResponse);
+
+        _mockContentRepository.Setup(r => r.SaveAll(It.IsAny<List<Content>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>());
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to save new contents.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToSaveNewExercises()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder()
+                .WithId("DefaultContentId")
+                .WithOwnerId("iacademy")
+                .Build()
+        };
+
+        var exercises = new List<Exercise>()
+        {
+            new ExerciseBuilder()
+                .WithId("DefaultExerciseId")
+                .Build()
+        };
+
+        var exerciseGetAllByIdsResponse = new ServiceResult<List<Exercise>>
+        {
+            Success = true,
+            Data = exercises
+        };
+
+        var saveAllResponse = new ServiceResult<List<string>>
+        {
+            Success = true,
+            Data = new List<string>()
+        };
+
+        var contentSaveAllResponse = new List<string>()
+        {
+            "id"
+        };
+
+        var exerciseSaveAllResponse = new ServiceResult<List<string>>
+        {
+            Success = false
+        };
+
+        SetupCommonMocks(summary, contents, exercises);
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        _mockExerciseService.Setup(e => e.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseGetAllByIdsResponse);
+
+        _mockContentRepository.Setup(r => r.SaveAll(It.IsAny<List<Content>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentSaveAllResponse);
+
+        _mockExerciseService.Setup(e => e.SaveAll(It.IsAny<List<Exercise>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseSaveAllResponse);
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Error to save new exercises.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnError_WHEN_FailedToEnrollUser()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder()
+                .WithId("DefaultContentId")
+                .WithOwnerId("iacademy")
+                .Build()
+        };
+
+        var exercises = new List<Exercise>()
+        {
+            new ExerciseBuilder()
+                .WithId("DefaultExerciseId")
+                .Build()
+        };
+
+        var saveResponse = new ServiceResult<string>
+        {
+            Success = false
+        };
+
+        var exerciseSaveAllResponse = new ServiceResult<List<string>>
+        {
+            Success = true,
+            Data = new List<string>()
+            {
+                "id"
+            }
+        };
+
+        var contentSaveAllResponse = new List<string>()
+        {
+            "id"
+        };
+
+        SetupCommonMocks(summary, contents, exercises);
+
+        _mockSummaryService.Setup(s => s.Save(It.IsAny<SummaryRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(saveResponse);
+
+        _mockExerciseService.Setup(e => e.SaveAll(It.IsAny<List<Exercise>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseSaveAllResponse);
+
+        _mockContentRepository.Setup(r => r.SaveAll(It.IsAny<List<Content>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentSaveAllResponse);
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Fail to enroll user, try again.");
+    }
+
+    [Fact]
+    public async Task CopyContentsToEnrollUser_SHOULD_ReturnSuccess_WHEN_AllConditionsMet()
+    {
+        var summary = new SummaryBuilder()
+            .WithOwnerId("iacademy")
+            .Build();
+
+        var contents = new List<Content>()
+        {
+            new ContentBuilder()
+                .WithId("DefaultContentId")
+                .WithOwnerId("iacademy")
+                .Build()
+        };
+
+        var exercises = new List<Exercise>()
+        {
+            new ExerciseBuilder()
+                .WithId("DefaultExerciseId")
+                .Build()
+        };
+
+        var saveResponse = new ServiceResult<string>
+        {
+            Success = true,
+            Data = "NewSummaryId"
+        };
+
+        var exerciseSaveAllResponse = new ServiceResult<List<string>>
+        {
+            Success = true,
+            Data = new List<string>()
+            {
+                "id"
+            }
+        };
+
+        var exerciseGetAllByIdsResponse = new ServiceResult<List<Exercise>>
+        {
+            Success = true,
+            Data = exercises
+        };
+
+        var contentSaveAllResponse = new List<string>()
+        {
+            "id"
+        };
+
+        SetupCommonMocks(summary, contents, exercises);
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        _mockExerciseService.Setup(e => e.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseGetAllByIdsResponse);
+
+        _mockSummaryService.Setup(s => s.Save(It.IsAny<SummaryRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(saveResponse);
+
+        _mockExerciseService.Setup(e => e.SaveAll(It.IsAny<List<Exercise>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exerciseSaveAllResponse);
+
+        _mockContentRepository.Setup(r => r.SaveAll(It.IsAny<List<Content>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentSaveAllResponse);
+
+
+        _mockSummaryService.Setup(s => s.Save(It.IsAny<SummaryRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(saveResponse);
+
+        var result = await contentService.CopyContentsToEnrollUser(_validRequest);
+
+        result.Success.Should().BeTrue();
+        result.Data.Should().Be("NewSummaryId");
+    }
+
+    private void SetupCommonMocks(Summary summary, List<Content> contents, List<Exercise> exercises)
+    {
+        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<Summary> 
+            { 
+                Success = true, 
+                Data = summary 
+            });
+
+        _mockContentRepository.Setup(r => r.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contents);
+
+        _mockExerciseService.Setup(e => e.GetAllByIds(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<List<Exercise>> 
+            { 
+                Success = true, 
+                Data = exercises 
+            });
+    }
 }

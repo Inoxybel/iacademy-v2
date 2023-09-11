@@ -82,19 +82,19 @@ public class ContentRequestValidatorTests
     [InlineData("", true)]
     [InlineData("12345678-1234-1234-1234-1234567890123", false)]
     [InlineData("12345678-1234-1234-1234-123456789012", true)]
-    public void ValidateExerciceId(string exerciceId, bool expected)
+    public void ValidateExerciseId(string ExerciseId, bool expected)
     {
-        var model = new ContentRequest { ExerciceId = exerciceId };
+        var model = new ContentRequest { ExerciseId = ExerciseId };
 
         var result = _validator.TestValidate(model);
 
         if (expected)
         {
-            result.ShouldNotHaveValidationErrorFor(x => x.ExerciceId);
+            result.ShouldNotHaveValidationErrorFor(x => x.ExerciseId);
         }
         else
         {
-            result.ShouldHaveValidationErrorFor(x => x.ExerciceId);
+            result.ShouldHaveValidationErrorFor(x => x.ExerciseId);
         }
     }
 

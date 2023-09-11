@@ -195,6 +195,40 @@ public class SummaryService : ISummaryService
         var summary = new Summary
         {
             Id = Guid.NewGuid().ToString(),
+            OriginId = request.OriginId,
+            OwnerId = request.OwnerId,
+            ConfigurationId = request.ConfigurationId,
+            ChatId = request.ChatId,
+            CreatedDate = DateTime.UtcNow,
+            IsAvaliable = request.IsAvaliable,
+            Category = request.Category,
+            Subcategory = request.Subcategory,
+            Theme = request.Theme,
+            Topics = request.Topics
+        };
+
+        var success = await _repository.Save(summary, cancellationToken);
+
+        if (!success)
+            return new()
+            {
+                Success = false,
+                ErrorMessage = "Failed to save."
+            };
+
+        return new()
+        {
+            Success = true,
+            Data = summary.Id
+        };
+    }
+
+    public async Task<ServiceResult<string>> Save(SummaryRequest request, string newId, CancellationToken cancellationToken = default)
+    {
+        var summary = new Summary
+        {
+            Id = newId,
+            OriginId = request.OriginId,
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
             ChatId = request.ChatId,
@@ -249,35 +283,6 @@ public class SummaryService : ISummaryService
         };
     }
 
-    public async Task<ServiceResult<SummaryResponse>> EnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default)
-    {
-        var summary = await _repository.Get(request.SummaryId, cancellationToken);
-
-        if (summary is null)
-            return GetFailResponse("Summary not found.");
-
-        if(!summary.OwnerId.Equals("iacademy"))
-            return GetFailResponse("This summary is not master.");
-
-        summary.OriginId = summary.Id;
-        summary.OwnerId = request.OwnerId;
-        summary.Id = Guid.NewGuid().ToString();
-
-        var repositoryResponse = await _repository.Save(summary, cancellationToken);
-
-        if (repositoryResponse)
-            return new()
-            {
-                Success = true,
-                Data = new()
-                {
-                    Id = summary.Id
-                }
-            };
-
-        return GetFailResponse("Fail to enroll user, try again.");
-    }
-
     private static List<Topic> MapTopicsFromResponse(OpenAIResponse response)
     {
         var content = response.Choices.First().Message.Content;
@@ -291,7 +296,7 @@ public class SummaryService : ISummaryService
         return new();
     }
 
-    private static ServiceResult<SummaryResponse> GetFailResponse(string message) => new()
+    private static ServiceResult<Summary> GetFailResponse(string message) => new()
     {
         Success = false,
         ErrorMessage = message

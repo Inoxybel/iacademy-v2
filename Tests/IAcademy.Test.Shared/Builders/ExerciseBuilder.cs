@@ -12,9 +12,10 @@ public class ExerciseBuilder
     private static Exercise CreateDefault() => new()
     {
         Id = Guid.NewGuid().ToString(),
-        OwnerId = string.Empty,
-        CorrectionId = string.Empty,
-        ConfigurationId = string.Empty,
+        OwnerId = "DefaultOwnerId",
+        ContentId = "DefaultContentId",
+        CorrectionId = "DefaultCorrectionId",
+        ConfigurationId = "DefaultConfigurationId",
         Status = ExerciseStatus.WaitingToDo,
         Type = ExerciseType.Default, 
         SendedAt = DateTime.UtcNow,
@@ -35,6 +36,12 @@ public class ExerciseBuilder
     public ExerciseBuilder WithOwnerId(string ownerId)
     {
         exercise.OwnerId = ownerId;
+        return this;
+    }
+
+    public ExerciseBuilder WithContentId(string contentId)
+    {
+        exercise.ContentId = contentId;
         return this;
     }
 

@@ -1,6 +1,7 @@
 ﻿using Domain.DTO.Content;
 using Domain.DTO;
 using Domain.Entities;
+using Domain.DTO.Summary;
 
 namespace Domain.Services;
 
@@ -12,6 +13,7 @@ public interface IContentService
     Task<ServiceResult<List<Content>>> GetAllBySummaryId(string summaryId, CancellationToken cancellationToken = default);
     Task<ServiceResult<string>> Save(ContentRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<List<string>>> SaveAll(List<ContentRequest> contents, CancellationToken cancellationToken = default);
+    Task<ServiceResult<string>> CopyContentsToEnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<bool>> Update(string contentId, ContentRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<bool>> UpdateAll(string summaryId, List<Content> contents, CancellationToken cancellationToken = default);
 }

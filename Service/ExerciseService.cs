@@ -42,6 +42,24 @@ public class ExerciseService : IExerciseService
         };
     }
 
+    public async Task<ServiceResult<List<Exercise>>> GetAllByIds(IEnumerable<string> exerciseIds, CancellationToken cancellationToken = default)
+    {
+        var exercises = await _repository.GetAllByIds(exerciseIds, cancellationToken);
+
+        if (!exercises.Any())
+            return new()
+            {
+                Success = false,
+                ErrorMessage = "Exercises not found."
+            };
+
+        return new()
+        {
+            Data = exercises,
+            Success = true
+        };
+    }
+
     public async Task<ServiceResult<List<Exercise>>> GetAllByOwnerIdAndType(string ownerId, ExerciseType type, CancellationToken cancellationToken = default)
     {
         var exercises = await _repository.GetAllByOwnerIdAndType(ownerId, type, cancellationToken);
@@ -135,6 +153,24 @@ public class ExerciseService : IExerciseService
         {
             Data = id,
             Success = success
+        };
+    }
+
+    public async Task<ServiceResult<List<string>>> SaveAll(IEnumerable<Exercise> exercises, CancellationToken cancellationToken = default)
+    {
+        var repositoryResult = await _repository.SaveAll(exercises, cancellationToken);
+
+        if (!repositoryResult.Any())
+            return new ServiceResult<List<string>>
+            {
+                Success = false,
+                ErrorMessage = "Error while save exercises"
+            };
+
+        return new()
+        {
+            Data = repositoryResult,
+            Success = true
         };
     }
 

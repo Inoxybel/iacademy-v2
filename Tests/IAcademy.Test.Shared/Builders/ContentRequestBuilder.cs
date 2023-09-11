@@ -14,7 +14,7 @@ public class ContentRequestBuilder
         OwnerId = string.Empty,
         SummaryId = string.Empty,
         ConfigurationId = string.Empty,
-        ExerciceId = string.Empty,
+        ExerciseId = string.Empty,
         Theme = "DefaultTheme",
         SubtopicIndex = "1",
         Title = "DefaultTitle",
@@ -39,9 +39,9 @@ public class ContentRequestBuilder
         return this;
     }
 
-    public ContentRequestBuilder WithExerciceId(string exerciceId)
+    public ContentRequestBuilder WithExerciseId(string ExerciseId)
     {
-        contentRequest.ExerciceId = exerciceId;
+        contentRequest.ExerciseId = ExerciseId;
         return this;
     }
 

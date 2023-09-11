@@ -11,10 +11,14 @@ namespace IAcademyAPI.Controllers.v1;
 public class SummaryController : ControllerBase
 {
     private readonly ISummaryService _summaryService;
+    private readonly IContentService _contentService;
 
-    public SummaryController(ISummaryService summaryService)
+    public SummaryController(
+        ISummaryService summaryService,
+        IContentService contentService)
     {
         _summaryService = summaryService;
+        _contentService = contentService;
     }
 
     [HttpGet("{id}")]
@@ -92,12 +96,12 @@ public class SummaryController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _summaryService.EnrollUser(request, cancellationToken);
+        var newContentResult = await _contentService.CopyContentsToEnrollUser(request, cancellationToken);
 
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
+        if (!newContentResult.Success)
+            return BadRequest(newContentResult.ErrorMessage);
 
-        return Ok(result.Data);
+        return Ok(newContentResult.Data);
     }
 
     [HttpPut("{summaryId}")]

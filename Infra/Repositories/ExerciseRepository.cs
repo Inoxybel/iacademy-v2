@@ -20,6 +20,15 @@ public class ExerciseRepository : IExerciseRepository
         return await _dbContext.Exercise.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<List<Exercise>> GetAllByIds(IEnumerable<string> ids, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<Exercise>.Filter.In(c => c.Id, ids);
+
+        var cursor = await _dbContext.Exercise.FindAsync(filter, null, cancellationToken);
+
+        return await cursor.ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Exercise>> GetAllByOwnerIdAndType(string ownerId, ExerciseType type, CancellationToken cancellationToken = default)
     {
         var filter = Builders<Exercise>.Filter.And(
@@ -50,7 +59,20 @@ public class ExerciseRepository : IExerciseRepository
         }
     }
 
-    public async Task<bool> Update(string exerciseId, Exercise exercise, CancellationToken cancellationToken = default)
+    public async Task<List<string>> SaveAll(IEnumerable<Exercise> exercises, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _dbContext.Exercise.InsertManyAsync(exercises, null, cancellationToken);
+            return exercises.Select(c => c.Id).ToList();
+        }
+        catch
+        {
+            return new();
+        }
+    }
+
+        public async Task<bool> Update(string exerciseId, Exercise exercise, CancellationToken cancellationToken = default)
     {
         try
         {

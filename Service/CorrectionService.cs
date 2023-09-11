@@ -55,6 +55,7 @@ public class CorrectionService : ICorrectionService
             return GetFailResponse("There is already a correction process for this exercise.");
 
         exerciseRecovered.Status = ExerciseStatus.WaitingCorrection;
+        exerciseRecovered.SendedAt = DateTime.UtcNow;
 
         SaveAnswers(request.Exercises, exerciseRecovered.Exercises);
 

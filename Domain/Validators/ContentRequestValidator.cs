@@ -19,9 +19,9 @@ public class ContentRequestValidator : AbstractValidator<ContentRequest>
             .NotEmpty().WithMessage("The Configuration ID is required.")
             .Length(36).WithMessage("The Configuration ID must be 36 characters long.");
 
-        RuleFor(x => x.ExerciceId)
+        RuleFor(x => x.ExerciseId)
             .Length(36).WithMessage("The ExerciseId, if provided, must be 36 characters long.")
-            .When(x => !string.IsNullOrEmpty(x.ExerciceId));
+            .When(x => !string.IsNullOrEmpty(x.ExerciseId));
 
         RuleFor(x => x.Theme)
             .NotEmpty().WithMessage("The Theme is required.")

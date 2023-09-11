@@ -35,6 +35,28 @@ public class ExerciseRepositoryTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task ShouldGetAllExercises()
+    {
+        var firstExercise = new ExerciseBuilder().Build();
+        var secondExercise = new ExerciseBuilder().Build();
+
+        _fixture.DbContext.Exercise.InsertMany(new List<Exercise>()
+        {
+            firstExercise,
+            secondExercise
+        });
+
+        var result = await _fixture.serviceProvider.GetRequiredService<IExerciseRepository>().GetAllByIds(new List<string>()
+        {
+            firstExercise.Id,
+            secondExercise.Id
+        });
+
+        result.Any().Should().BeTrue();
+        result.Count().Should().Be(2);
+    }
+
+    [Fact]
     public async Task ShouldGetAllExercisesByOwnerIdAndType()
     {
         var ownerId = Guid.NewGuid().ToString();

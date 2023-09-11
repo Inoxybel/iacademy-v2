@@ -11,7 +11,7 @@ public class ContentRequest
     public string SummaryId { get; set; }
     [Required]
     public string ConfigurationId { get; set; }
-    public string ExerciceId { get; set; }
+    public string ExerciseId { get; set; }
     [Required]
     public string Theme { get; set; }
     [Required]

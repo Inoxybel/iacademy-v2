@@ -78,14 +78,14 @@ public class GeneratorService : IGeneratorService
                 ErrorMessage = "Error to save exercise"
             };
 
-        content.ExerciceId = exercise.Id;
+        content.ExerciseId = exercise.Id;
 
         var contentRequest = new ContentRequest()
         {
             OwnerId = content.OwnerId,
             SummaryId = content.SummaryId,
             ConfigurationId = content.ConfigurationId,
-            ExerciceId = exercise.Id,
+            ExerciseId = exercise.Id,
             Theme = content.Theme,
             SubtopicIndex = content.SubtopicIndex,
             Title = content.Title,
@@ -162,14 +162,14 @@ public class GeneratorService : IGeneratorService
                 ErrorMessage = "Error to save exercise"
             };
 
-        content.ExerciceId = exercise.Id;
+        content.ExerciseId = exercise.Id;
 
         var contentRequest = new ContentRequest()
         {
             OwnerId = content.OwnerId,
             SummaryId = content.SummaryId,
             ConfigurationId = content.ConfigurationId,
-            ExerciceId = exercise.Id,
+            ExerciseId = exercise.Id,
             Theme = content.Theme,
             SubtopicIndex = content.SubtopicIndex,
             Title = content.Title,

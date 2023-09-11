@@ -11,10 +11,10 @@ public class ContentBuilder
     private static Content CreateDefault() => new()
     {
         Id = Guid.NewGuid().ToString(),
-        OwnerId = Guid.NewGuid().ToString(),
-        SummaryId = Guid.NewGuid().ToString(),
-        ConfigurationId = Guid.NewGuid().ToString(),
-        ExerciceId = Guid.NewGuid().ToString(),
+        OwnerId = "DefaultOwnerId",
+        SummaryId = "DefaultSummaryId",
+        ConfigurationId = "DefaultConfigurationId",
+        ExerciseId = "DefaultExerciseId",
         Theme = "DefaultTheme",
         SubtopicIndex = "1",
         Title = "DefaultTitle",
@@ -50,9 +50,9 @@ public class ContentBuilder
         return this;
     }
 
-    public ContentBuilder WithExerciceId(string exerciceId)
+    public ContentBuilder WithExerciseId(string ExerciseId)
     {
-        content.ExerciceId = exerciceId;
+        content.ExerciseId = ExerciseId;
         return this;
     }
 

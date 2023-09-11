@@ -20,6 +20,15 @@ public class ContentRepository : IContentRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<List<Content>> GetAllByIds(IEnumerable<string> ids, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<Content>.Filter.In(c => c.Id, ids);
+
+        var cursor = await _dbContext.Content.FindAsync(filter, null, cancellationToken);
+
+        return await cursor.ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Content>> GetAllBySummaryId(string summaryId, CancellationToken cancellationToken = default)
     {
         return await (await _dbContext.Content.FindAsync(c => c.SummaryId == summaryId, cancellationToken: cancellationToken))
@@ -69,7 +78,7 @@ public class ContentRepository : IContentRepository
                 .Set(c => c.OwnerId, request.OwnerId)
                 .Set(c => c.ConfigurationId, request.ConfigurationId)
                 .Set(c => c.SummaryId, request.SummaryId)
-                .Set(c => c.ExerciceId, request.ExerciceId)
+                .Set(c => c.ExerciseId, request.ExerciseId)
                 .Set(c => c.SubtopicIndex, request.SubtopicIndex)
                 .Set(c => c.Title, request.Title)
                 .Set(c => c.Theme, request.Theme)
@@ -99,7 +108,7 @@ public class ContentRepository : IContentRepository
                     .Set(c => c.OwnerId, content.OwnerId)
                     .Set(c => c.ConfigurationId, content.ConfigurationId)
                     .Set(c => c.SummaryId, content.SummaryId)
-                    .Set(c => c.ExerciceId, content.ExerciceId)
+                    .Set(c => c.ExerciseId, content.ExerciseId)
                     .Set(c => c.SubtopicIndex, content.SubtopicIndex)
                     .Set(c => c.Title, content.Title)
                     .Set(c => c.Body, content.Body)
