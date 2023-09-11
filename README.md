@@ -9,7 +9,7 @@ O projeto IAcademy integra a inteligência artificial da OpenAI para resolver es
 
 # Deploy dessa API .NET no Azure App Service
 
-Abaixo o paasso a passo de como fazer deploy desse aplicação .NET diretamente no Azure App Service:
+Abaixo o passo a passo de como fazer o clone e uso dessa aplicação .NET em conjunto com um banco de dados na Azure:
 
 ## Pré-requisitos
 
@@ -31,43 +31,60 @@ Abaixo o paasso a passo de como fazer deploy desse aplicação .NET diretamente 
 ## Preparação
 
 4. **Clone o Repositório**: Abra o terminal e navegue até a pasta que deseja clonar o projeto. Clone o projeto contido nesse repositório utilizando o comando abaixo:
-	```sh
-	git clone https://github.com/Inoxybel/iacademy.git
-	```
-
-5. **Construir a Aplicação**: Navegue até a pasta do projeto onde contém o arquivo `.sln` do projeto .NET e construa a aplicação com o comando:
    ```sh
-   dotnet publish -c Release
+   git clone https://github.com/Inoxybel/iacademy.git
    ```
+   
+## Base
 
-## Deploy
-
-6. **Criar Grupo de Recursos**: Crie um grupo de recursos no Azure com o comando:
+5. **Criar Grupo de Recursos**: Crie um grupo de recursos no Azure com o comando:
    ```sh
    az group create --name nome-do-seu-grupo-de-recursos --location sua-regiao
    ```
-
-7. **Criar Plano de Serviço de Aplicativo**: Crie um plano de serviço de aplicativo com o comando:
+   
+6. **Criar uma Instância do Azure Cosmos DB**: Crie um recurso do serviço Cosmos DB para MongoDB:
    ```sh
-   az appservice plan create --name nomeDoSeuPlanoDeServico --resource-group nome-do-seu-grupo-de-recursos --sku FREE
+   az cosmosdb create --name nomeDoSeuCosmosDB --resource-group nome-do-seu-grupo-de-recursos --kind MongoDB --locations regionName=sua-regiao failoverPriority=0 isZoneRedundant=False
+   ```
+   
+7. **Obter a Connection String**: Recupere a String de Conexão que será usada na aplicação para que ela possa se conectar ao banco de dados na nuvem:
+   ```sh
+   az cosmosdb keys list --name nomeDoSeuCosmosDB --resource-group nome-do-seu-grupo-de-recursos --type connection-strings
    ```
 
-8. **Criar Aplicativo Web**: Crie um aplicativo web com o comando:
+8. **Configurar Connection String no Projeto**: 
+
+   - Abra o arquivo appsettings.Development.json localizado em Application/IAcademyAPI/
+
+   - Na linha:
    ```sh
-   az webapp create --resource-group nome-do-seu-grupo-de-recursos --plan nomeDoSeuPlanoDeServico --name nomeDoSeuAplicativoWeb
+   "IAcademy:Mongo:ConnectionString": "mongodb://localhost:27017",
    ```
 
-9. **Deploy da Aplicação**: Faça o deploy da sua aplicação usando o comando:
-   ```sh
-   az webapp up --name nomeDoSeuAplicativoWeb --sku F1 --html
-   ```
+Troque o valor "mongodb://localhost:27017" pela ConnectionString copiada no passo 8 e salve o arquivo.
+
 
 ## Verificação
 
-10. **Acesse sua API**: Agora você deve ser capaz de acessar sua API através do URL do aplicativo web:
+9. **Acesse sua API**: Agora use o SDK dotnet instalado para compilar e rodar a aplicação:
+
+   - Ainda estando no diretório Application/IAcademyAPI/ , execute o seguinte comando:
+   ```sh
+   dotnet run IAcademyAPI.csproj
    ```
-   https://nomeDoSeuAplicativoWeb.azurewebsites.net
+
+   Acesse a URL: http://localhost:5210/swagger
+ 
+## Disclaimer
+
+Na linha:
+   ```sh
+   "IAcademy:ExternalServices:OpenAI:SecretKey": "SECRET_FROM_OPENAI"
    ```
+
+   Você deve colocar sua API Key obtida direto no site da OpenAI após se cadastrar, no link: https://platform.openai.com/account/api-keys
+
+   Caso contrário não conseguirá utilizar os endpoints da controller AI, apenas conseguirá utilizar os endpoints de CRUD direto com o banco de dados.
 
 # Uso da aplicação:
 
