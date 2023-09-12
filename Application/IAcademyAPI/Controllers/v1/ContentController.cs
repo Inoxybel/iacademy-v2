@@ -49,7 +49,7 @@ public class ContentController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return Created(string.Empty, result.Data);
     }
 
     [HttpPost("save-all")]
@@ -63,7 +63,7 @@ public class ContentController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return Created(string.Empty, result.Data);
     }
 
     [HttpPut("{contentId}")]
@@ -77,7 +77,7 @@ public class ContentController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return NoContent();
     }
 
     [HttpPut("update-all/summary/{summaryId}")]
@@ -91,6 +91,6 @@ public class ContentController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return NoContent();
     }
 }

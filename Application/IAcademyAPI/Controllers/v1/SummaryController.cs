@@ -87,7 +87,7 @@ public class SummaryController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return Created(string.Empty, result.Data);
     }
 
     [HttpPost("enroll")]
@@ -101,7 +101,7 @@ public class SummaryController : ControllerBase
         if (!newContentResult.Success)
             return BadRequest(newContentResult.ErrorMessage);
 
-        return Ok(newContentResult.Data);
+        return Created(string.Empty, newContentResult.Data);
     }
 
     [HttpPut("{summaryId}")]
@@ -115,6 +115,6 @@ public class SummaryController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return NoContent();
     }
 }

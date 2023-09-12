@@ -37,6 +37,6 @@ public class CorrectionController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return NoContent();
     }
 }

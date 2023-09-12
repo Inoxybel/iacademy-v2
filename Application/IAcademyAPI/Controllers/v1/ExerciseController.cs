@@ -49,7 +49,7 @@ public class ExerciseController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return Created(string.Empty, result.Data);
     }
 
     [HttpPut("{exerciseId}")]
@@ -63,6 +63,6 @@ public class ExerciseController : ControllerBase
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 
-        return Ok(result.Data);
+        return NoContent();
     }
 }
