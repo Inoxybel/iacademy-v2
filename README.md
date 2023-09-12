@@ -74,75 +74,75 @@ Abaixo o passo a passo de como fazer deploy desse aplicação .NET diretamente n
    Caso contrário não conseguirá utilizar os endpoints da controller AI, apenas conseguirá utilizar os endpoints de CRUD direto com o banco de dados.
 
 ## Deploy
-	- Após abrir o projeto, clique com o direito no projeto IAcademyAPI e depois em Publish
-	
-	![passo4](./docs/steps_readme/4.png)
-	
-	- Na janela que abrir, clique em "Add a publish  profile"
-	
-	![passo5](./docs/steps_readme/5.png)
-	
-	- Na janela que abrir, selecione Docker Container Registry e clique em next
-	
-	![passo6](./docs/steps_readme/6.png)
-	
-	- Selecione o serviço Azure Container Registry e e clique em next
-	
-	![passo7](./docs/steps_readme/7.png)
-	
-	- Agora clique em "+ Create new" para criar um novo  registro
-	
-	![passo8](./docs/steps_readme/8.png)
-	
-	- Preencha como na imagem colocando o nome desejado e seus recursos
-	
-	![passo9](./docs/steps_readme/9.png)
-	
-	- Após criado, selecione e clique em next
-	
-	![passo10](./docs/steps_readme/10.png)
-	
-	- Selecione Docker Desktop
-	
-	![passo11](./docs/steps_readme/11.png)
-	
-	- Ao aparecer a mensagem "Ready to publish", clique no botão "Publish"
-	
-	![passo12](./docs/steps_readme/12.png)
-	
-	- Aguarde concluir o processo
-	
-	![passo13](./docs/steps_readme/13.png)
-	
-	- Quando aparecer concluído significa que a imagem foi publicada
-	
-	![passo14](./docs/steps_readme/14.png)
-	
-	Agora precisamos criar o serviço e carregar essa imagem para usar a aplicação:
-	
-	- Acesse o link: https://portal.azure.com/#create/Microsoft.WebSite
-	
-	- Crie o serviço web utilizando a publicação por container
-	
-	![passo15](./docs/steps_readme/15.png)
-	
-	- Selecione o registro de container criado no Visual Studio:
-	
-	![passo16](./docs/steps_readme/16.png)
-	
-	- Se nessa página você receber um erro, entre no recurso de registro criado e ative usuário administrador como na imagem:
-	
-	![passo17](./docs/steps_readme/17.png)
-	
-	- Clique em Revisar e Criar e Crie
-	
-	![passo18](./docs/steps_readme/18.png)
-	
-	- Agora para concluir entre no recurso da aplicação e sete a variável de ambiente ASPNETCORE_ENVIRONMENT com valor Development:
-	
-	![passo19](./docs/steps_readme/189.png)
-	
-	- Salve e aguarde a aplicação reiniciar
+- Após abrir o projeto, clique com o direito no projeto IAcademyAPI e depois em Publish
+
+![passo4](./docs/steps_readme/4.png)
+
+- Na janela que abrir, clique em "Add a publish  profile"
+
+![passo5](./docs/steps_readme/5.png)
+
+- Na janela que abrir, selecione Docker Container Registry e clique em next
+
+![passo6](./docs/steps_readme/6.png)
+
+- Selecione o serviço Azure Container Registry e e clique em next
+
+![passo7](./docs/steps_readme/7.png)
+
+- Agora clique em "+ Create new" para criar um novo  registro
+
+![passo8](./docs/steps_readme/8.png)
+
+- Preencha como na imagem colocando o nome desejado e seus recursos
+
+![passo9](./docs/steps_readme/9.png)
+
+- Após criado, selecione e clique em next
+
+![passo10](./docs/steps_readme/10.png)
+
+- Selecione Docker Desktop
+
+![passo11](./docs/steps_readme/11.png)
+
+- Ao aparecer a mensagem "Ready to publish", clique no botão "Publish"
+
+![passo12](./docs/steps_readme/12.png)
+
+- Aguarde concluir o processo
+
+![passo13](./docs/steps_readme/13.png)
+
+- Quando aparecer concluído significa que a imagem foi publicada
+
+![passo14](./docs/steps_readme/14.png)
+
+Agora precisamos criar o serviço e carregar essa imagem para usar a aplicação:
+
+- Acesse o link: https://portal.azure.com/#create/Microsoft.WebSite
+
+- Crie o serviço web utilizando a publicação por container
+
+![passo15](./docs/steps_readme/15.png)
+
+- Selecione o registro de container criado no Visual Studio:
+
+![passo16](./docs/steps_readme/16.png)
+
+- Se nessa página você receber um erro, entre no recurso de registro criado e ative usuário administrador como na imagem:
+
+![passo17](./docs/steps_readme/17.png)
+
+- Clique em Revisar e Criar e Crie
+
+![passo18](./docs/steps_readme/18.png)
+
+- Agora para concluir entre no recurso da aplicação e sete a variável de ambiente ASPNETCORE_ENVIRONMENT com valor Development:
+
+![passo19](./docs/steps_readme/189.png)
+
+- Salve e aguarde a aplicação reiniciar
 
 
 ## Verificação
