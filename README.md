@@ -140,7 +140,7 @@ Agora precisamos criar o serviço e carregar essa imagem para usar a aplicação
 
 - Agora para concluir entre no recurso da aplicação e sete a variável de ambiente ASPNETCORE_ENVIRONMENT com valor Development:
 
-![passo19](./docs/steps_readme/189.png)
+![passo19](./docs/steps_readme/19.png)
 
 - Salve e aguarde a aplicação reiniciar
 
