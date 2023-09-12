@@ -29,8 +29,8 @@ public class ContentRequestValidator : AbstractValidator<ContentRequest>
 
         RuleFor(x => x.SubtopicIndex)
             .NotEmpty().WithMessage("The Subtopic Index is required.")
-            .MaximumLength(2).WithMessage("The SubtopicIndex cannot exceed 2 characters.")
-            .Matches("^[0-9]+$").WithMessage("The SubtopicIndex can only contain numeric characters.");
+            .MaximumLength(3).WithMessage("The SubtopicIndex cannot exceed 3 characters.")
+            .Matches("^[0-9.]+$").WithMessage("The SubtopicIndex can only contain numeric characters.");
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("The Title is required.")

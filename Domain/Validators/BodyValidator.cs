@@ -16,7 +16,7 @@ public class BodyValidator : AbstractValidator<Body>
             .NotEmpty().WithMessage("The Created Date is required.");
 
         RuleFor(x => x.DisabledDate)
-            .Must((body, date) => date == default || date > body.CreatedDate)
-            .WithMessage("The Disabled Date must be later than the Created Date, if provided.");
+            .Must((body, date) => date == default || date <= body.CreatedDate)
+            .WithMessage("The Disabled Date must be earlier than or equal to the Created Date, if provided.");
     }
 }

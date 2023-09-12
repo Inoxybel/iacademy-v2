@@ -54,6 +54,11 @@ public class Program
         services.AddScoped<IConfigurationService, ConfigurationService>();
         services.AddScoped<IChatCompletionsService, ChatCompletionsService>();
 
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
+
         services
             .AddFluentValidationAutoValidation()
             .AddValidatorsFromAssemblyContaining<SummaryCreationRequestValidator>();
@@ -63,17 +68,13 @@ public class Program
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.SuppressMapClientErrors = false;
+                options.SuppressModelStateInvalidFilter = true;
             })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-
-        services.Configure<ApiBehaviorOptions>(options =>
-        {
-            options.SuppressModelStateInvalidFilter = true;
-        });
 
         services
             .AddSwagger()

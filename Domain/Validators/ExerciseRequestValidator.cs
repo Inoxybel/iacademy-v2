@@ -12,8 +12,8 @@ public class ExerciseRequestValidator : AbstractValidator<ExerciseRequest>
             .Length(36).WithMessage("The Owner ID must be 36 characters long.");
 
         RuleFor(x => x.CorrectionId)
-            .NotEmpty().WithMessage("The Correction ID is required.")
-            .Length(36).WithMessage("The Correction ID must be 36 characters long.");
+            .Length(36).WithMessage("The Correction ID must be 36 characters long.")
+            .When(x => !string.IsNullOrEmpty(x.CorrectionId));
 
         RuleFor(x => x.ConfigurationId)
             .NotEmpty().WithMessage("The Configuration ID is required.")
@@ -29,8 +29,8 @@ public class ExerciseRequestValidator : AbstractValidator<ExerciseRequest>
 
         RuleFor(x => x.TopicIndex)
             .NotEmpty().WithMessage("The TopicIndex is required.")
-            .Matches("^[0-9]+$").WithMessage("The TopicIndex can only contain numeric characters.")
-            .MaximumLength(2).WithMessage("The TopicIndex cannot exceed 2 characters.");
+            .Matches("^[0-9.]+$").WithMessage("The TopicIndex can only contain numeric characters.")
+            .MaximumLength(3).WithMessage("The TopicIndex cannot exceed 3 characters.");
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("The Title is required.")

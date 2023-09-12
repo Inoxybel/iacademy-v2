@@ -13,6 +13,5 @@ public class Summary
     public string Category { get; set; }
     public string Subcategory { get; set; }
     public string Theme { get; set; }
-
     public List<Topic> Topics { get; set; }
 }

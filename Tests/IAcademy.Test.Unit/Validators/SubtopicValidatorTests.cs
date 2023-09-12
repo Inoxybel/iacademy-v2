@@ -17,8 +17,8 @@ public class SubtopicValidatorTests
     [InlineData(null, false)]
     [InlineData("", false)]
     [InlineData("1", true)]
-    [InlineData("12", true)]
-    [InlineData("123", false)]
+    [InlineData("1.2", true)]
+    [InlineData("1.23", false)]
     [InlineData("1a", false)]
     public void ValidateIndex(string index, bool expected)
     {

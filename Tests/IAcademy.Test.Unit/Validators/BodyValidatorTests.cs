@@ -68,8 +68,8 @@ public class BodyValidatorTests
     }
 
     [Theory]
-    [InlineData("2023-09-10", "2023-09-11", true)]
-    [InlineData("2023-09-10", "2023-09-09", false)]
+    [InlineData("2023-09-10", "2023-09-11", false)]
+    [InlineData("2023-09-10", "2023-09-09", true)]
     [InlineData("2023-09-10", "", true)]
     public void ValidateDisabledDate(string createdDateStr, string disabledDateStr, bool expected)
     {

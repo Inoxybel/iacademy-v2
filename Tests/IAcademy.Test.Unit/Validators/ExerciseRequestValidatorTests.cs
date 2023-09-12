@@ -40,8 +40,8 @@ public class ExerciseRequestValidatorTests
     }
 
     [Theory]
-    [InlineData(null, false)]
-    [InlineData("", false)]
+    [InlineData(null, true)]
+    [InlineData("", true)]
     [InlineData("123456789012345678901234567890123456", true)]
     [InlineData("12345", false)]
     public void ValidateCorrectionId(string correctionId, bool expected)
@@ -138,8 +138,9 @@ public class ExerciseRequestValidatorTests
     [Theory]
     [InlineData(null, false)]
     [InlineData("", false)]
+    [InlineData("1.14", false)]
     [InlineData("12", true)]
-    [InlineData("123", false)]
+    [InlineData("1.3", true)]
     [InlineData("1a", false)]
     public void ValidateTopicIndex(string topicIndex, bool expected)
     {

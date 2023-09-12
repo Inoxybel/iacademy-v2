@@ -15,6 +15,8 @@ public class SummaryRequestValidator : AbstractValidator<SummaryRequest>
             .NotEmpty().WithMessage("The Owner ID is required.")
             .Length(36).WithMessage("The Owner ID must be 36 characters long.");
 
+        RuleFor(x => x.ChatId);
+
         RuleFor(x => x.ConfigurationId)
             .NotEmpty().WithMessage("The Configuration ID is required.")
             .Length(36).WithMessage("The Configuration ID must be 36 characters long.");

@@ -9,8 +9,8 @@ public class TopicValidator : AbstractValidator<Topic>
     {
         RuleFor(x => x.Index)
             .NotEmpty().WithMessage("The Index is required.")
-            .Matches("^[0-9]+$").WithMessage("The Topic Index can only contain numeric characters.")
-            .MaximumLength(2).WithMessage("The Index cannot exceed 2 characters.");
+            .Matches("^[0-9.]+$").WithMessage("The Topic Index can only contain numeric characters.")
+            .MaximumLength(3).WithMessage("The Index cannot exceed 3 characters.");
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("The Title is required.")
