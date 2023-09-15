@@ -88,7 +88,7 @@
 **Exemplo de corpo do request**
 ```js
 {
-  "topicIndex": "1.1"
+  "subtopicIndex": "1.1"
 }
 ```
 
