@@ -30,19 +30,19 @@ Abaixo o passo a passo de como fazer deploy desse aplicação .NET diretamente n
 6. **Criar Grupo de Recursos**: Crie um grupo de recursos no Azure:
    - Acesse o link: https://portal.azure.com/#create/Microsoft.ResourceGroup
    
-   ![passo1](./docs/steps_readme/1.png)
+   ![passo1](./steps_readme/1.png)
    
 7. **Criar uma Instância do Azure Cosmos DB**: Crie um recurso do serviço Cosmos DB para MongoDB:
    - Acesse o link: https://portal.azure.com/#view/Microsoft_Azure_DocumentDB/MongoDB_Type_Selection.ReactView
    
-   ![passo2](./docs/steps_readme/2.png)
+   ![passo2](./steps_readme/2.png)
    
    - Selecione o grupo de recursos criado ou crie um novo, preencha o formulário e clique em criar
    
 8. **Obter a Connection String**: Recupere a String de Conexão que será usada na aplicação para que ela possa se conectar ao banco de dados na nuvem:
    - Após a criação do recurso, entre nas configurações/Cadeia de Conexão:
    
-   ![passo3](./docs/steps_readme/3.png)
+   ![passo3](./steps_readme/3.png)
    
    - Copie a ConnectionString primária ou segundária
 
@@ -67,47 +67,47 @@ Abaixo o passo a passo de como fazer deploy desse aplicação .NET diretamente n
 ## Deploy
 - Após abrir o projeto, clique com o direito no projeto IAcademyAPI e depois em Publish
 
-![passo4](./docs/steps_readme/4.png)
+![passo4](./steps_readme/4.png)
 
 - Na janela que abrir, clique em "Add a publish  profile"
 
-![passo5](./docs/steps_readme/5.png)
+![passo5](./steps_readme/5.png)
 
 - Na janela que abrir, selecione Docker Container Registry e clique em next
 
-![passo6](./docs/steps_readme/6.png)
+![passo6](./steps_readme/6.png)
 
 - Selecione o serviço Azure Container Registry e e clique em next
 
-![passo7](./docs/steps_readme/7.png)
+![passo7](./steps_readme/7.png)
 
 - Agora clique em "+ Create new" para criar um novo  registro
 
-![passo8](./docs/steps_readme/8.png)
+![passo8](./steps_readme/8.png)
 
 - Preencha como na imagem colocando o nome desejado e seus recursos
 
-![passo9](./docs/steps_readme/9.png)
+![passo9](./steps_readme/9.png)
 
 - Após criado, selecione e clique em next
 
-![passo10](./docs/steps_readme/10.png)
+![passo10](./steps_readme/10.png)
 
 - Selecione Docker Desktop
 
-![passo11](./docs/steps_readme/11.png)
+![passo11](./steps_readme/11.png)
 
 - Ao aparecer a mensagem "Ready to publish", clique no botão "Publish"
 
-![passo12](./docs/steps_readme/12.png)
+![passo12](./steps_readme/12.png)
 
 - Aguarde concluir o processo
 
-![passo13](./docs/steps_readme/13.png)
+![passo13](./steps_readme/13.png)
 
 - Quando aparecer concluído significa que a imagem foi publicada
 
-![passo14](./docs/steps_readme/14.png)
+![passo14](./steps_readme/14.png)
 
 Agora precisamos criar o serviço e carregar essa imagem para usar a aplicação:
 
@@ -115,32 +115,31 @@ Agora precisamos criar o serviço e carregar essa imagem para usar a aplicação
 
 - Crie o serviço web utilizando a publicação por container
 
-![passo15](./docs/steps_readme/15.png)
+![passo15](./steps_readme/15.png)
 
 - Selecione o registro de container criado no Visual Studio:
 
-![passo16](./docs/steps_readme/16.png)
+![passo16](./steps_readme/16.png)
 
 - Se nessa página você receber um erro, entre no recurso de registro criado e ative usuário administrador como na imagem:
 
-![passo17](./docs/steps_readme/17.png)
+![passo17](./steps_readme/17.png)
 
 - Clique em Revisar e Criar e Crie
 
-![passo18](./docs/steps_readme/18.png)
+![passo18](./steps_readme/18.png)
 
 - Agora para concluir entre no recurso da aplicação e sete a variável de ambiente ASPNETCORE_ENVIRONMENT com valor Development:
 
-![passo19](./docs/steps_readme/19.png)
+![passo19](./steps_readme/19.png)
 
 - Salve e aguarde a aplicação reiniciar
-
 
 ## Verificação
 
 10. **Acesse sua API**: Agora você deve ser capaz de acessar sua API através do URL apresentada após a publicação:
    
-   ![passo20](./docs/steps_readme/20.png)
+![passo20](./steps_readme/20.png)
    
    Mas lembre-se de que é uma API, então visualmente você precisa adicionar /swagger na URL para ter uma interface
    
