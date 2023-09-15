@@ -78,7 +78,7 @@
 
 ---
 
-## Criar conteúdos do subtópico
+## Criar conteúdo do subtópico
 `POST` /api/ai/summary/{summaryId}/create-content-by-subtopic
 
 | Campo | Tipo | Obrigatório | Descrição
@@ -100,8 +100,10 @@
 **Códigos de Resposta**
 | Código | Descrição
 |:-:|-
-| 201 | Conteúdos criados com sucesso
+| 201 | Conteúdo criado com sucesso
 | 400 | Erro na requisição
+
+[Voltar ao início](#endpoints)
 
 ---
 
