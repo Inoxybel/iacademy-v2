@@ -1,7 +1,7 @@
 ## Endpoints
 - AI
   - [Criar Resumo](#criar-resumo)
-  - [Criar conteúdo do Subtópico](#criar-conteúdo-do-subtópico)
+  - [Criar conteúdo do subtópico](#criar-conteúdo-do-subtópico)
   - [Criar conteúdo alternativo](#criar-conteúdo-alternativo)
   - [Criar exercício](#criar-exercício)
   - [Criar correção](#criar-correção)
@@ -78,27 +78,23 @@
 
 ---
 
-## Criar conteúdos do Tópico
-`POST` /api/ai/summary/{summaryId}/create-content-by-topic
+## Criar conteúdos do subtópico
+`POST` /api/ai/summary/{summaryId}/create-content-by-subtopic
 
 | Campo | Tipo | Obrigatório | Descrição
 |:-------:|:------:|:-------------:|--
-| topicIndex | string | sim | índice do tópico desejado
+| subtopicIndex | string | sim | índice do tópico desejado
 
 **Exemplo de corpo do request**
 ```js
 {
-  "topicIndex": "1"
+  "topicIndex": "1.1"
 }
 ```
 
 **Exemplo de corpo de response**
 ```js
-[
-	"07cd1867-05c2-431f-a2a7-eea9e935378c",
-	"4e520ee6-8f81-49fe-8dd7-d972e58bac4e",
-	"1ba702b0-6781-4ef7-b6a4-c3612c1d0f7c"
-]
+"07cd1867-05c2-431f-a2a7-eea9e935378c"
 ```
 
 **Códigos de Resposta**
