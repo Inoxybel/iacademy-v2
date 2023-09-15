@@ -1,5 +1,4 @@
 ﻿using CrossCutting.Enums;
-using CrossCutting.Extensions;
 using Domain.DTO;
 using Domain.DTO.Correction;
 using Domain.Entities;
@@ -37,11 +36,13 @@ public class CorrectionService : ICorrectionService
         var correction = await _correctionRepository.Get(correctionId, cancellationToken);
 
         if (correction is null)
-        {
-            return new ServiceResult<Correction> { Success = false, ErrorMessage = "Correction not found." };
-        }
+            return MakeErrorResult<Correction>("Correction not found.");
 
-        return new ServiceResult<Correction> { Data = correction, Success = true };
+        return new()
+        { 
+            Success = true, 
+            Data = correction
+        };
     }
 
     public async Task<ServiceResult<Correction>> MakeCorrection(string exerciseId, CreateCorrectionRequest request, CancellationToken cancellationToken = default)
@@ -49,10 +50,10 @@ public class CorrectionService : ICorrectionService
         var exerciseRecovered = await _exerciseRepository.Get(exerciseId, cancellationToken);
 
         if (exerciseRecovered is null)
-            return GetFailResponse("Failed to get exercise.");
+            return MakeErrorResult<Correction>("Failed to get exercise.");
 
         if (exerciseRecovered.Status != ExerciseStatus.WaitingToDo)
-            return GetFailResponse("There is already a correction process for this exercise.");
+            return MakeErrorResult<Correction>("There is already a correction process for this exercise.");
 
         exerciseRecovered.Status = ExerciseStatus.WaitingCorrection;
         exerciseRecovered.SendedAt = DateTime.UtcNow;
@@ -62,31 +63,31 @@ public class CorrectionService : ICorrectionService
         var updateExerciseResult = await _exerciseRepository.Update(exerciseId, exerciseRecovered, cancellationToken);
 
         if (!updateExerciseResult)
-            return GetFailResponse("Failed to update exercise.");
+            return MakeErrorResult<Correction>("Failed to update exercise.");
 
         var configurationRecovered = await _configurationRepository.Get(exerciseRecovered.ConfigurationId, cancellationToken);
 
         if (configurationRecovered is null)
-            return GetFailResponse("Failed to get configurations.");
+            return MakeErrorResult<Correction>("Failed to get configurations.");
 
         var correction = await GetCorrectionFromOpenAI(exerciseRecovered.Exercises, configurationRecovered.Correction);
 
         if (correction.Corrections is null || !correction.Corrections.Any())
-            return GetFailResponse("Failed to deserialize IA response");
+            return MakeErrorResult<Correction>("Failed to deserialize IA response");
 
         correction = CompleteCorrectionAttributes(correction, exerciseRecovered);
 
         var correctionSaveResult = await _correctionRepository.Save(correction, cancellationToken);
 
         if (!correctionSaveResult)
-            return GetFailResponse("Failed to save correction");
+            return MakeErrorResult<Correction>("Failed to save correction");
 
         var newExercise = UpdateExercise(correction.Id, exerciseRecovered);
 
         var exerciseUpdateResult = await _exerciseRepository.Update(exerciseId, newExercise, cancellationToken);
 
         if (!exerciseUpdateResult)
-            return GetFailResponse("Failed to update exercise");
+            return MakeErrorResult<Correction>("Failed to update exercise");
 
         var incorrectExercises = correction.Corrections.Where(c => c.IsCorrect == false).ToList();
 
@@ -96,15 +97,12 @@ public class CorrectionService : ICorrectionService
 
             var pendencyExercise = await RequestPendencyExercicesToAI(oldExercises, configurationRecovered.Pendency);
 
-            pendencyExercise.OwnerId = exerciseRecovered.OwnerId;
-            pendencyExercise.ConfigurationId = exerciseRecovered.ConfigurationId;
-            pendencyExercise.TopicIndex = exerciseRecovered.TopicIndex;
-            pendencyExercise.ContentId = exerciseRecovered.ContentId;
+            pendencyExercise = CompletePendencyExerciseValues(pendencyExercise, exerciseRecovered);
 
             var savePendencyResult = await _exerciseRepository.Save(pendencyExercise, cancellationToken);
 
             if (!savePendencyResult)
-                return GetFailResponse("Failed to save pendency");
+                return MakeErrorResult<Correction>("Failed to save pendency");
         }
 
         return new ServiceResult<Correction>
@@ -128,11 +126,7 @@ public class CorrectionService : ICorrectionService
         var success = await _correctionRepository.Update(correctionId, correction, cancellationToken);
 
         if (!success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to update."
-            };
+            return MakeErrorResult<bool>("Failed to update.");
 
         return new()
         {
@@ -158,12 +152,6 @@ public class CorrectionService : ICorrectionService
 
         return exercise;
     }
-
-    private static ServiceResult<Correction> GetFailResponse(string message) => new()
-    {
-        Success = false,
-        ErrorMessage = message
-    };
 
     private static Exercise UpdateExercise(string correctionId, Exercise oldExercise) => new()
     {
@@ -283,4 +271,21 @@ public class CorrectionService : ICorrectionService
 
         return correction;
     }
+
+    private static Exercise CompletePendencyExerciseValues(Exercise pendencyExercise, Exercise exerciseRecovered)
+    {
+        pendencyExercise.OwnerId = exerciseRecovered.OwnerId;
+        pendencyExercise.ConfigurationId = exerciseRecovered.ConfigurationId;
+        pendencyExercise.TopicIndex = exerciseRecovered.TopicIndex;
+        pendencyExercise.ContentId = exerciseRecovered.ContentId;
+
+        return pendencyExercise;
+    }
+
+    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
+    {
+        Success = false,
+        ErrorMessage = message,
+        Data = default
+    };
 }

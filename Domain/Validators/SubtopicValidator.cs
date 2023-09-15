@@ -19,6 +19,9 @@ public class SubtopicValidator : AbstractValidator<Subtopic>
         RuleFor(x => x.ContentId)
             .Length(36).When(x => !string.IsNullOrEmpty(x.ContentId))
             .WithMessage("The ContentId, if provided, must be 36 characters long.");
-            
+
+        RuleFor(x => x.ExerciseId)
+            .Length(36).When(x => !string.IsNullOrEmpty(x.ExerciseId))
+            .WithMessage("The ExerciseId, if provided, must be 36 characters long.");
     }
 }

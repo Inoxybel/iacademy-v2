@@ -2,5 +2,5 @@
 
 public class AIContentCreationRequest
 {
-    public string TopicIndex { get; set; }
+    public string SubtopicIndex { get; set; }
 }

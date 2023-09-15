@@ -288,7 +288,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -314,7 +314,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -348,7 +348,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "0"
+            SubtopicIndex = "0"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -383,7 +383,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -431,7 +431,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -446,8 +446,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -467,7 +466,7 @@ public class ContentServiceTests
             .ReturnsAsync(configurationResult);
 
         _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-    .ReturnsAsync(chatCompletionsReturn);
+            .ReturnsAsync(chatCompletionsReturn);
 
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
@@ -492,7 +491,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -507,8 +506,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -543,7 +541,7 @@ public class ContentServiceTests
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(contentId);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
@@ -566,7 +564,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -581,8 +579,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -612,7 +609,7 @@ public class ContentServiceTests
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         _mockContentRepository.SetupSequence(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -642,7 +639,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -657,8 +654,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -696,7 +692,7 @@ public class ContentServiceTests
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -725,7 +721,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -740,8 +736,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                       "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -777,7 +772,7 @@ public class ContentServiceTests
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -793,7 +788,7 @@ public class ContentServiceTests
 
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNullOrEmpty();
-        result.Data.Count().Should().Be(2);
+        result.Data.Length.Should().Be(36);
     }
 
     [Fact]
@@ -810,7 +805,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -825,8 +820,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -863,7 +857,7 @@ public class ContentServiceTests
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -879,7 +873,7 @@ public class ContentServiceTests
 
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNullOrEmpty();
-        result.Data.Count().Should().Be(2);
+        result.Data.Length.Should().Be(36);
 
         _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<string>()),Times.Never);
         _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()), Times.Once);
@@ -899,7 +893,7 @@ public class ContentServiceTests
 
         var aIContentCreationRequest = new AIContentCreationRequest()
         {
-            TopicIndex = "1"
+            SubtopicIndex = "1.1"
         };
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -914,8 +908,7 @@ public class ContentServiceTests
                 new ChoicesBuilder()
                 .WithMessage(new MessageBuilder()
                     .WithContent(
-                        "{\"Subtopics\":[{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}," +
-                        "{\"Index\":\"1.2\",\"Title\":\"Advanced Topics\",\"Content\":\"content\"}]}"
+                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":\"content\"}}"
                      )
                     .Build()
                 )
@@ -952,7 +945,7 @@ public class ContentServiceTests
         _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<Configuration>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(makeExerciseResult);
 
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -968,7 +961,7 @@ public class ContentServiceTests
 
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNullOrEmpty();
-        result.Data.Count().Should().Be(2);
+        result.Data.Length.Should().Be(36);
 
         _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<string>()), Times.Once);
         _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<string>()), Times.Never);

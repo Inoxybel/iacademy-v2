@@ -16,26 +16,26 @@ public class AIContentCreationRequestValidatorTests
     [Theory]
     [InlineData(null, false)]
     [InlineData("", false)]
-    [InlineData("12345", true)]
+    [InlineData("1.1", true)]
     [InlineData("12345a", false)]
     [InlineData("abcde", false)]
     [InlineData(" ", false)]
-    public void ValidateTopicIndex(string topicIndex, bool expected)
+    public void ValidateTopicIndex(string subtopicIndex, bool expected)
     {
         var model = new AIContentCreationRequest
         {
-            TopicIndex = topicIndex
+            SubtopicIndex = subtopicIndex
         };
 
         var result = _validator.TestValidate(model);
 
         if (expected)
         {
-            result.ShouldNotHaveValidationErrorFor(x => x.TopicIndex);
+            result.ShouldNotHaveValidationErrorFor(x => x.SubtopicIndex);
         }
         else
         {
-            result.ShouldHaveValidationErrorFor(x => x.TopicIndex);
+            result.ShouldHaveValidationErrorFor(x => x.SubtopicIndex);
         }
     }
 }

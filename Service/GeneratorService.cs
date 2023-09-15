@@ -33,36 +33,32 @@ public class GeneratorService : IGeneratorService
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error while getting content"
-            };
+            return MakeErrorResult<string>("Error while getting content");
 
         var configurationGetResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
         if (!configurationGetResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = configurationGetResult.ErrorMessage
-            };
+            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
 
-        var openAIRequest = MakeOpenAIRequestToExercise(configurationGetResult.Data.Exercise, content.Body.First(c => c.DisabledDate == DateTime.MinValue).Content);
+        return await Execute(content, configurationGetResult.Data, cancellationToken);
+    }
+
+    public async Task<ServiceResult<string>> MakeExercise(Content content, Configuration configuration, CancellationToken cancellationToken = default) =>
+        await Execute(content, configuration, cancellationToken);
+
+    private async Task<ServiceResult<string>> Execute(Content content, Configuration configuration, CancellationToken cancellationToken = default)
+    {
+        var openAIRequest = MakeOpenAIRequestToExercise(configuration.Exercise, content.Body.First(c => c.DisabledDate == DateTime.MinValue).Content);
 
         var openAIResponse = await _openAIService.DoRequest(openAIRequest);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to get OpenAI response"
-            };
+            return MakeErrorResult<string>("Error to get OpenAI response");
 
         var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
         exercise.Id = Guid.NewGuid().ToString();
         exercise.OwnerId = content.OwnerId;
-        exercise.ConfigurationId = configurationGetResult.Data.Id;
+        exercise.ConfigurationId = configuration.Id;
         exercise.ContentId = content.Id;
         exercise.Status = ExerciseStatus.WaitingToDo;
         exercise.Type = ExerciseType.Default;
@@ -72,11 +68,7 @@ public class GeneratorService : IGeneratorService
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 
         if (!exerciseSaveResponse)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to save exercise"
-            };
+            return MakeErrorResult<string>("Error to save exercise");
 
         content.ExerciseId = exercise.Id;
 
@@ -95,11 +87,7 @@ public class GeneratorService : IGeneratorService
         var contentSaveResponse = await _contentRepository.Update(content.Id, contentRequest, cancellationToken);
 
         if (!contentSaveResponse)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to update content"
-            };
+            return MakeErrorResult<string>("Error to update content");
 
         return new()
         {
@@ -113,20 +101,12 @@ public class GeneratorService : IGeneratorService
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error while getting content"
-            };
+            return MakeErrorResult<string>("Error while getting content");
 
         var configurationGetResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
         if (!configurationGetResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = configurationGetResult.ErrorMessage
-            };
+            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
 
         var openAIRequest = MakeOpenAIRequestToPendency(
             configurationGetResult.Data.Pendency, 
@@ -137,11 +117,7 @@ public class GeneratorService : IGeneratorService
         var openAIResponse = await _openAIService.DoRequest(openAIRequest);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to get OpenAI response"
-            };
+            return MakeErrorResult<string>("Error to get OpenAI response");
 
         var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
         exercise.Id = Guid.NewGuid().ToString();
@@ -156,11 +132,7 @@ public class GeneratorService : IGeneratorService
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 
         if (!exerciseSaveResponse)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to save exercise"
-            };
+            return MakeErrorResult<string>("Error to save exercise");
 
         content.ExerciseId = exercise.Id;
 
@@ -179,11 +151,7 @@ public class GeneratorService : IGeneratorService
         var contentSaveResponse = await _contentRepository.Update(content.Id, contentRequest, cancellationToken);
 
         if (!contentSaveResponse)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to update content"
-            };
+            return MakeErrorResult<string>("Error to update content");
 
         return new()
         {
@@ -191,6 +159,13 @@ public class GeneratorService : IGeneratorService
             Data = exercise.Id
         };
     }
+
+    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
+    {
+        Success = false,
+        ErrorMessage = message,
+        Data = default
+    };
 
     private static string MakeOpenAIRequestToExercise(InputProperties configuration, string content) =>
         $"{configuration.InitialInput} {content} {configuration.FinalInput}";

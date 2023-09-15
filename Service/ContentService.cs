@@ -43,11 +43,7 @@ public class ContentService : IContentService
         var content = await _contentRepository.Get(id, cancellationToken);
 
         if (content == null)
-            return new ServiceResult<Content>
-            {
-                Success = false,
-                ErrorMessage = "Content not found."
-            };
+            return MakeErrorResult<Content>("Content not found.");
 
         return new()
         {
@@ -61,11 +57,7 @@ public class ContentService : IContentService
         var contents = await _contentRepository.GetAllBySummaryId(summaryId, cancellationToken);
 
         if (contents == null || !contents.Any())
-            return new ServiceResult<List<Content>>
-            {
-                Success = false,
-                ErrorMessage = "No contents found."
-            };
+            return MakeErrorResult<List<Content>>("No contents found.");
 
         return new()
         {
@@ -93,11 +85,7 @@ public class ContentService : IContentService
         var repositoryResponse = await _contentRepository.Save(content, cancellationToken);
 
         if (string.IsNullOrEmpty(repositoryResponse))
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save content."
-            };
+            return MakeErrorResult<string>("Failed to save content.");
 
         return new()
         {
@@ -109,39 +97,21 @@ public class ContentService : IContentService
     public async Task<ServiceResult<List<string>>> SaveAll(List<ContentRequest> contents, CancellationToken cancellationToken = default)
     {
         if (!contents.Any())
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "No contents sended"
-            };
+            return MakeErrorResult<List<string>>("No contents sended");
 
         var contentsToSave = new List<Content>();
 
         foreach (var content in contents)
         {
-            contentsToSave.Add(new()
-            {
-                Id = Guid.NewGuid().ToString(),
-                OwnerId = content.OwnerId,
-                SummaryId = content.SummaryId,
-                ConfigurationId = content.ConfigurationId,
-                ExerciseId = content.ExerciseId,
-                Theme = content.Theme,
-                SubtopicIndex = content.SubtopicIndex,
-                Title = content.Title,
-                Body = content.Body,
-                CreatedDate = DateTime.UtcNow
-            });
+            contentsToSave.Add(
+                MakeNewContentFromContentRequest(content)
+            );
         }
 
         var repositoryResponse = await _contentRepository.SaveAll(contentsToSave, cancellationToken);
 
         if (!repositoryResponse.Any())
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save all contents."
-            };
+            return MakeErrorResult<List<string>>("Failed to save all contents.");
 
         return new()
         {
@@ -150,16 +120,14 @@ public class ContentService : IContentService
         };
     }
 
+
+
     public async Task<ServiceResult<bool>> Update(string contentId, ContentRequest request, CancellationToken cancellationToken = default)
     {
         var isSuccess = await _contentRepository.Update(contentId, request, cancellationToken);
 
         if (!isSuccess)
-            return new ServiceResult<bool>
-            {
-                Success = false,
-                ErrorMessage = "Failed to update content."
-            };
+            return MakeErrorResult<bool>("Failed to update content.");
 
         return new()
         {
@@ -173,11 +141,7 @@ public class ContentService : IContentService
         var isSuccess = await _contentRepository.UpdateAll(summaryId, contents, cancellationToken);
 
         if (!isSuccess)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = $"Failed to update contents for summary ID {summaryId}."
-            };
+            return MakeErrorResult<bool>($"Failed to update contents for summary ID {summaryId}.");
 
         return new()
         {
@@ -186,28 +150,28 @@ public class ContentService : IContentService
         };
     }
 
-    public async Task<ServiceResult<List<string>>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default)
     {
         Content newContent = new();
 
         var getSummaryResult = await _summaryService.Get(summaryId, cancellationToken);
 
         if (!getSummaryResult.Success)
-            return MakeErrorResult<List<string>>("Error to find summary");
+            return MakeErrorResult<string>("Error to find summary");
 
         var summary = getSummaryResult.Data;
 
         var getConfigurationResult = await _configurationService.Get(summary.ConfigurationId, cancellationToken);
 
         if (!getConfigurationResult.Success)
-            return MakeErrorResult<List<string>>("Error to find configuration");
+            return MakeErrorResult<string>("Error to find configuration");
 
         var configuration = getConfigurationResult.Data;
 
-        var topic = summary.Topics.Find(t => t.Index == request.TopicIndex);
+        var subtopic = summary.Topics.SelectMany(t => t.Subtopics).FirstOrDefault(s => s.Index == request.SubtopicIndex);
 
-        if (topic is null)
-            return MakeErrorResult<List<string>>("Error to find index on topic");
+        if (subtopic is null)
+            return MakeErrorResult<string>("Error to find index on topic");
 
         var chatCompletions = await _chatCompletionsService.Get(summary.ChatId, cancellationToken);
 
@@ -215,77 +179,46 @@ public class ContentService : IContentService
 
         if (chatCompletions.Success)
         {
-            var requestString = MakeOpenAIFirstContentRequest(configuration.FirstContent, request.TopicIndex);
+            var requestString = MakeOpenAIFirstContentRequest(configuration.FirstContent, request.SubtopicIndex);
 
-            openAIResponse = await _openAIService.DoRequest(chatCompletions.Data, requestString);
+            openAIResponse = await _openAIService.DoRequest(chatCompletions.Data, requestString);                
         }
         else
-        {
-            var topicSummary = $"{topic.Index} {topic.Title}: {string.Join(", ", topic.Subtopics.Select(st => st.Index + " " + st.Title))}";
-            
-            var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, string.Empty, topicSummary);
+        {            
+            var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, subtopic.Title);
 
             openAIResponse = await _openAIService.DoRequest(requestString);
         }
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult<List<string>>("Error to get OpenAI content create response");
+            return MakeErrorResult<string>("Error to get OpenAI content create response");
 
-        var newContents = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>();
+        var summaryContent = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>();
 
-        if (!newContents.IsValid())
-            newContents = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>(true);
+        if (summaryContent.Subtopic is null)
+            summaryContent = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>(true);
 
-        var idList = new List<string>();
+        newContent = MakeNewContent(summary, summaryContent.Subtopic);
 
-        foreach (var subtopic in newContents.Subtopics)
-        {
-            newContent = new Content()
-            {
-                Id = Guid.NewGuid().ToString(),
-                OwnerId = summary.OwnerId,
-                ConfigurationId = summary.ConfigurationId,
-                SummaryId = summary.Id,
-                Theme = summary.Theme,
-                SubtopicIndex = subtopic.Index,
-                Title = subtopic.Title,
-                CreatedDate = DateTime.UtcNow,
-                Body = new List<Body>()
-                    {
-                        new Body()
-                        {
-                            Content = subtopic.Content,
-                            CreatedDate = DateTime.UtcNow
-                        }
-                    }
-            };
+        var saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
-            var saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
+        if (string.IsNullOrEmpty(saveContentResult))
+            return MakeErrorResult<string>("Error to save content");
 
-            if (string.IsNullOrEmpty(saveContentResult))
-                return MakeErrorResult<List<string>>("Error to save content");
+        var makeExerciseResult = await _exerciseGeneratorService.MakeExercise(newContent, configuration, cancellationToken);
 
-            var makeExerciseResult = await _exerciseGeneratorService.MakeExercise(newContent.Id, cancellationToken);
+        if (!makeExerciseResult.Success)
+            return MakeErrorResult<string>("Error to make exercise");
 
-            if (!makeExerciseResult.Success)
-                return MakeErrorResult<List<string>>("Error to make exercise");
+        newContent.ExerciseId = makeExerciseResult.Data;
 
-            newContent.ExerciseId = makeExerciseResult.Data;
+        saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
-            saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
+        if (string.IsNullOrEmpty(saveContentResult))
+            return MakeErrorResult<string>("Error to update content");
 
-            if (string.IsNullOrEmpty(saveContentResult))
-                return MakeErrorResult<List<string>>("Error to update content");
-
-            var subtopicToUpdade = summary.Topics
-                .SelectMany(topic => topic.Subtopics)
-                .FirstOrDefault(sub => sub.Index == subtopic.Index);
-
-            if (subtopicToUpdade is not null)
-                subtopicToUpdade.ContentId = newContent.Id;
-
-            idList.Add(newContent.Id);
-        }
+        subtopic.ContentId = newContent.Id;
+        subtopic.ExerciseId = newContent.ExerciseId;
 
         var summaryUpdateRequest = new SummaryRequest()
         {
@@ -301,12 +234,12 @@ public class ContentService : IContentService
         var updateSummaryResult = await _summaryService.Update(summaryId, summaryUpdateRequest, cancellationToken);
 
         if (!updateSummaryResult.Success)
-            return MakeErrorResult<List<string>>("Error to update summary");
+            return MakeErrorResult<string>("Error to update summary");
 
         return new()
         {
             Success = true,
-            Data = idList
+            Data = newContent.Id
         };
     }
 
@@ -327,7 +260,10 @@ public class ContentService : IContentService
         var resultGetLastContent = content.Body.First(c => c.DisabledDate == DateTime.MinValue)?.Content;
         var lastContent = resultGetLastContent ?? string.Empty;
 
-        var requestString = MakeOpenAIRequest(configuration.NewContent, content.Theme, content.Title, lastContent);
+        if (string.IsNullOrEmpty(lastContent))
+            return MakeErrorResult<string>("Error to get active content");
+
+        var requestString = MakeOpenAIRequest(configuration.NewContent, lastContent);
 
         var openAIResponse = await _openAIService.DoRequest(requestString);
 
@@ -423,6 +359,40 @@ public class ContentService : IContentService
             Data = summaryRepositoryResponse.Data
         };
     }
+
+    private static Content MakeNewContent(Summary summary, SummarySubtopicDTO subtopic) => new()
+    {
+        Id = Guid.NewGuid().ToString(),
+        OwnerId = summary.OwnerId,
+        ConfigurationId = summary.ConfigurationId,
+        SummaryId = summary.Id,
+        Theme = summary.Theme,
+        SubtopicIndex = subtopic.Index,
+        Title = subtopic.Title,
+        CreatedDate = DateTime.UtcNow,
+        Body = new List<Body>()
+        {
+            new Body()
+            {
+                Content = subtopic.Content,
+                CreatedDate = DateTime.UtcNow
+            }
+        }
+    };
+
+    private static Content MakeNewContentFromContentRequest(ContentRequest content) => new()
+    {
+        Id = Guid.NewGuid().ToString(),
+        OwnerId = content.OwnerId,
+        SummaryId = content.SummaryId,
+        ConfigurationId = content.ConfigurationId,
+        ExerciseId = content.ExerciseId,
+        Theme = content.Theme,
+        SubtopicIndex = content.SubtopicIndex,
+        Title = content.Title,
+        Body = content.Body,
+        CreatedDate = DateTime.UtcNow
+    };
 
     private static SummaryRequest MakeSummaryRequest(Summary summary) => new()
     {
@@ -527,9 +497,16 @@ public class ContentService : IContentService
         return request;
     }
 
-    private static string MakeOpenAIRequest(InputProperties configuration, string theme, string contentTitle, string content)
+    private static string MakeOpenAIRequest(InputProperties configuration, string theme, string title)
     {
-        var request = $"{configuration.InitialInput}: {theme} - {contentTitle} - {content} {configuration.FinalInput}";
+        var request = $"{configuration.InitialInput}: {theme} - {title} {configuration.FinalInput}";
+
+        return request;
+    }
+
+    private static string MakeOpenAIRequest(InputProperties configuration, string content)
+    {
+        var request = $"{configuration.InitialInput}: {content} {configuration.FinalInput}";
 
         return request;
     }

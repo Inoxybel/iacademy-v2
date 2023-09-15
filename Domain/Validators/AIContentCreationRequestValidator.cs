@@ -7,8 +7,8 @@ public class AIContentCreationRequestValidator : AbstractValidator<AIContentCrea
 {
     public AIContentCreationRequestValidator()
     {
-        RuleFor(request => request.TopicIndex)
+        RuleFor(request => request.SubtopicIndex)
             .NotEmpty().WithMessage("The Topic Index is required.")
-            .Matches("^[0-9]+$").WithMessage("The Topic Index can only contain numeric characters.");
+            .Matches("^[0-9.]+$").WithMessage("The Topic Index can only contain numeric characters.");
     }
 }

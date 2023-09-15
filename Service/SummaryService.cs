@@ -33,13 +33,7 @@ public class SummaryService : ISummaryService
         var summary = await _repository.Get(id, cancellationToken);
 
         if (summary is null)
-        {
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Summary not found."
-            };
-        }
+            return MakeErrorResult<Summary>("Summary not found.");
 
         return new()
         {
@@ -61,11 +55,7 @@ public class SummaryService : ISummaryService
             };
         }
 
-        return new()
-        {
-            Success = false,
-            ErrorMessage = "Summary not found."
-        };
+        return MakeErrorResult<List<Summary>>("Summary not found.");
     }
 
     public async Task<ServiceResult<List<Summary>>> GetAllByCategoryAndSubcategory(string category, string subcategory, bool isAvaliable = false, CancellationToken cancellationToken = default)
@@ -81,11 +71,7 @@ public class SummaryService : ISummaryService
             };
         }
 
-        return new()
-        {
-            Success = false,
-            ErrorMessage = "Summary not found."
-        };
+        return MakeErrorResult<List<Summary>>("Summary not found.");
     }
 
     public async Task<ServiceResult<List<Summary>>> GetAllByOwnerId(string ownerId, bool isAvaliable = false, CancellationToken cancellationToken = default)
@@ -101,11 +87,7 @@ public class SummaryService : ISummaryService
             };
         }
 
-        return new()
-        {
-            Success = false,
-            ErrorMessage = "Summary not found."
-        };
+        return MakeErrorResult<List<Summary>>("Summary not found.");
     }
 
     public async Task<ServiceResult<List<Summary>>> GetAllBySubcategory(string subcategory, bool isAvaliable = false, CancellationToken cancellationToken = default)
@@ -121,11 +103,7 @@ public class SummaryService : ISummaryService
             };
         }
 
-        return new()
-        {
-            Success = false,
-            ErrorMessage = "Summary not found."
-        };
+        return MakeErrorResult<List<Summary>>("Summary not found.");
     }
 
     public async Task<ServiceResult<string>> RequestCreationToAI(SummaryCreationRequest request, CancellationToken cancellationToken = default)
@@ -133,11 +111,7 @@ public class SummaryService : ISummaryService
         var configurationResponse = await _configurationService.Get(request.ConfigurationId, cancellationToken);
 
         if (!configurationResponse.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Configuration not founded"
-            };
+            return MakeErrorResult<string>("Configuration not founded");
 
         var configuration = configurationResponse.Data;
 
@@ -146,20 +120,12 @@ public class SummaryService : ISummaryService
         var openAIResponse = await _openAIService.DoRequest(openAIRequest);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to get OPENAI response"
-            };
+            return MakeErrorResult<string>("Failed to get OPENAI response");
 
         var chatCompletionResult = await _chatCompletionsService.Save(openAIResponse, cancellationToken);
 
         if (!chatCompletionResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save OpenAI response"
-            };
+            return MakeErrorResult<string>("Failed to save OpenAI response");
 
         var summary = new Summary
         {
@@ -177,11 +143,7 @@ public class SummaryService : ISummaryService
         var repositoryResponse = await _repository.Save(summary, cancellationToken);
 
         if (!repositoryResponse)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save summary"
-            };
+            return MakeErrorResult<string>("Failed to save summary");
 
         return new()
         {
@@ -210,11 +172,7 @@ public class SummaryService : ISummaryService
         var success = await _repository.Save(summary, cancellationToken);
 
         if (!success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save."
-            };
+            return MakeErrorResult<string>("Failed to save.");
 
         return new()
         {
@@ -243,11 +201,7 @@ public class SummaryService : ISummaryService
         var success = await _repository.Save(summary, cancellationToken);
 
         if (!success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to save."
-            };
+            return MakeErrorResult<string>("Failed to save.");
 
         return new()
         {
@@ -270,11 +224,7 @@ public class SummaryService : ISummaryService
         var updated = await _repository.Update(summaryId, request, cancellationToken);
 
         if (!updated)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Failed to update."
-            };
+            return MakeErrorResult<string>("Failed to update.");
 
         return new()
         {
@@ -296,9 +246,10 @@ public class SummaryService : ISummaryService
         return new();
     }
 
-    private static ServiceResult<Summary> GetFailResponse(string message) => new()
+    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
     {
         Success = false,
-        ErrorMessage = message
+        ErrorMessage = message,
+        Data = default
     };
 }

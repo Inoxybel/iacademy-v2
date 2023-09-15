@@ -29,11 +29,7 @@ public class ExerciseService : IExerciseService
         var exercise = await _repository.Get(exerciseId, cancellationToken);
 
         if (exercise is null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Exercise not found."
-            };
+            return MakeErrorResult<Exercise>("Exercise not found.");
 
         return new()
         {
@@ -47,11 +43,7 @@ public class ExerciseService : IExerciseService
         var exercises = await _repository.GetAllByIds(exerciseIds, cancellationToken);
 
         if (!exercises.Any())
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Exercises not found."
-            };
+            return MakeErrorResult<List<Exercise>>("Exercises not found.");
 
         return new()
         {
@@ -64,11 +56,7 @@ public class ExerciseService : IExerciseService
     {
         var exercises = await _repository.GetAllByOwnerIdAndType(ownerId, type, cancellationToken);
         if (!exercises.Any())
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "No exercises found."
-            };
+            return MakeErrorResult<List<Exercise>>("No exercises found.");
 
         return new()
         {
@@ -82,29 +70,17 @@ public class ExerciseService : IExerciseService
         var oldExercise = await _repository.Get(exerciseId, cancellationToken);
 
         if (oldExercise is null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Error to get old exercise",
-            };
+            return MakeErrorResult<string>("Error to get old exercise");
 
         var configurationGetResult = await _configurationService.Get(oldExercise.ConfigurationId, cancellationToken);
 
         if (!configurationGetResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = configurationGetResult.ErrorMessage
-            };
+            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
 
         var makePendencyResult = await _exerciseGenerator.MakePendency(oldExercise.ContentId, oldExercise.Exercises.Serialize(), cancellationToken);
 
         if (!makePendencyResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = makePendencyResult.ErrorMessage
-            };
+            return MakeErrorResult<string>(makePendencyResult.ErrorMessage);
 
         return new()
         {
@@ -118,11 +94,7 @@ public class ExerciseService : IExerciseService
         var makeExerciseResult = await _exerciseGenerator.MakeExercise(contentId, cancellationToken);
 
         if (!makeExerciseResult.Success)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = makeExerciseResult.ErrorMessage
-            };
+            return MakeErrorResult<string>(makeExerciseResult.ErrorMessage);
 
         return new()
         {
@@ -161,11 +133,7 @@ public class ExerciseService : IExerciseService
         var repositoryResult = await _repository.SaveAll(exercises, cancellationToken);
 
         if (!repositoryResult.Any())
-            return new ServiceResult<List<string>>
-            {
-                Success = false,
-                ErrorMessage = "Error while save exercises"
-            };
+            return MakeErrorResult<List<string>>("Error while save exercises");
 
         return new()
         {
@@ -179,11 +147,7 @@ public class ExerciseService : IExerciseService
         var exercise = await _repository.Get(exerciseId, cancellationToken);
 
         if (exercise == null)
-            return new ServiceResult<bool>
-            {
-                Success = false,
-                ErrorMessage = "Exercise not found."
-            };
+            return MakeErrorResult<bool>("Exercise not found.");
 
         var success = await _repository.Update(exerciseId, exercise, cancellationToken);
 
@@ -193,4 +157,11 @@ public class ExerciseService : IExerciseService
             Success = success
         };
     }
+
+    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
+    {
+        Success = false,
+        ErrorMessage = message,
+        Data = default
+    };
 }

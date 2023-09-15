@@ -3,7 +3,6 @@ using Domain.DTO.Content;
 using Domain.DTO.Correction;
 using Domain.DTO.Summary;
 using Domain.Services;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -45,7 +44,7 @@ public class AIController : ControllerBase
         return Created(string.Empty, result.Data);
     }
 
-    [HttpPost("summary/{summaryId}/create-content-by-topic")]
+    [HttpPost("summary/{summaryId}/create-content-by-subtopic")]
     public async Task<IActionResult> RequestContentCreationToAI([FromRoute] string summaryId, [FromBody] AIContentCreationRequest request, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)

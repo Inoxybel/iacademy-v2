@@ -8,7 +8,7 @@ namespace Domain.Services;
 public interface IContentService
 {
     Task<ServiceResult<string>> MakeAlternativeContent(string contentId, CancellationToken cancellationToken = default);
-    Task<ServiceResult<List<string>>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<string>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<Content>> Get(string id, CancellationToken cancellationToken = default);
     Task<ServiceResult<List<Content>>> GetAllBySummaryId(string summaryId, CancellationToken cancellationToken = default);
     Task<ServiceResult<string>> Save(ContentRequest request, CancellationToken cancellationToken = default);
