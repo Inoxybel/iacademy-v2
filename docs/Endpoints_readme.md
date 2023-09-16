@@ -1,7 +1,7 @@
 ## Endpoints
 - AI
   - [Criar Resumo](#criar-resumo)
-  - [Criar conteúdo do subtópico](#criar-conteúdo-do-subtópico)
+  - [Criar conteúdo do Subtópico](#criar-conteúdo-do-subtópico)
   - [Criar conteúdo alternativo](#criar-conteúdo-alternativo)
   - [Criar exercício](#criar-exercício)
   - [Criar correção](#criar-correção)
@@ -48,6 +48,7 @@
 | subcategory | string | sim | é a subcategoria dentro da categoria do treinamento
 | configurationId | string | sim | é o GUID da configuração no banco de dados
 | ownerId | string | sim | é o GUID que identifica o "dono" desse objeto no banco de dados
+| icon    | string | sim | String que representa a imagem SVG do treinamento
 
 
 **Exemplo de corpo do request**
@@ -57,7 +58,8 @@
   "category": "Tecnologia",
   "subcategory": "Programação",
   "configurationId": "1ba702b0-6781-4ef7-b6a4-c3612c1d0f7c",
-  "ownerId": "4e520ee6-8f81-49fe-8dd7-d972e58bac4e"
+  "ownerId": "4e520ee6-8f81-49fe-8dd7-d972e58bac4e",
+  "icon": "<svg>...</svg>"
 }
 ```
 
@@ -78,7 +80,7 @@
 
 ---
 
-## Criar conteúdo do subtópico
+## Criar conteúdos do Subtópico
 `POST` /api/ai/summary/{summaryId}/create-content-by-subtopic
 
 | Campo | Tipo | Obrigatório | Descrição
@@ -100,7 +102,7 @@
 **Códigos de Resposta**
 | Código | Descrição
 |:-:|-
-| 201 | Conteúdo criado com sucesso
+| 201 | Conteúdos criados com sucesso
 | 400 | Erro na requisição
 
 [Voltar ao início](#endpoints)
@@ -407,6 +409,7 @@ Feedback | string | Feedback associado a correção.
 | isAvailable      | boolean  | sim        | Retorna se o resumo está disponível |
 | category         | string   | sim        | Conteúdo da categoria do resumo |
 | subcategory      | string   | sim        | Conteúdo da subcategoria do resumo |
+| icon             | string   | sim        | String que representa a imagem SVG do treinamento |
 | theme            | string   | sim        | Tema do resumo |
 | topics           | lista    | sim        | Tópicos do resumo |
 | index            | string   | sim        | Índice do tópico |
@@ -429,6 +432,7 @@ Feedback | string | Feedback associado a correção.
   "isAvaliable": false,
   "category": "Marketing",
   "subcategory": "Content Marketing",
+  "icon": "<svg>...</svg>",
   "theme": "Storytelling",
   "topics": [
     {
@@ -513,6 +517,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
 | category         | string   | sim        | Conteúdo da categoria do resumo |
 | subcategory      | string   | sim        | Conteúdo da subcategoria do resumo |
 | theme            | string   | sim        | Tema do resumo |
+| icon             | string   | sim        | String que representa a imagem SVG do treinamento |
 | topics           | lista    | sim        | Tópicos do resumo |
 | index            | string   | sim        | Índice do tópico |
 | title            | int      | sim        | Título do tópico |
@@ -534,6 +539,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Marketing",
   "subcategory": "Content Marketing",
+  "icon": "<svg>...</svg>",
   "theme": "Storytelling",
   "topics": [
     {
@@ -587,6 +593,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Tecnologia",
   "subcategory": "Programação",
+  "icon": "<svg>...</svg>",
   "theme": "C# básico",
   "topics": [
     {
@@ -664,6 +671,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Tecnologia",
   "subcategory": "Container",
+  "icon": "<svg>...</svg>",
   "theme": "Docker",
   "topics": [
     {
@@ -715,6 +723,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Tecnologia",
   "subcategory": "Container",
+  "icon": "<svg>...</svg>",
   "theme": "Docker",
   "topics": [
     {
@@ -766,6 +775,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Tecnologia",
   "subcategory": "Container",
+  "icon": "<svg>...</svg>",
   "theme": "Docker",
   "topics": [
     {
@@ -817,6 +827,7 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "isAvaliable": false,
   "category": "Tecnologia",
   "subcategory": "Container",
+  "icon": "<svg>...</svg>",
   "theme": "Docker",
   "topics": [
     {

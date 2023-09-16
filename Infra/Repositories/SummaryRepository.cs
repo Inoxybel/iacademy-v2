@@ -84,6 +84,7 @@ public class SummaryRepository : ISummaryRepository
                 .Set(s => s.Category, summary.Category)
                 .Set(s => s.Subcategory, summary.Subcategory)
                 .Set(s => s.Theme, summary.Theme)
+                .Set(s => s.Icon, summary.Icon)
                 .Set(s => s.UpdatedDate, DateTime.UtcNow)
                 .Set(s => s.Topics, summary.Topics);
 

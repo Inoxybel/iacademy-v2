@@ -9,6 +9,7 @@ public class SummaryCreationRequestBuilder
     private static SummaryCreationRequest CreateDefault() => new SummaryCreationRequest
     {
         Theme = "DefaultTheme",
+        Icon = "DefaultIcon",
         Category = "DefaultCategory",
         Subcategory = "DefaultSubcategory",
         ConfigurationId = "DefaultConfigurationId",

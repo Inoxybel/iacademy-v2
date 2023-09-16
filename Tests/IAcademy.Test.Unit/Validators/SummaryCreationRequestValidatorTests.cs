@@ -118,4 +118,23 @@ public class SummaryCreationRequestValidatorTests
             result.ShouldHaveValidationErrorFor(request => request.OwnerId);
         }
     }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("Icon", true)]
+    public void ValidateIcon(string icon, bool expected)
+    {
+        var model = new SummaryCreationRequest { Icon = icon };
+        var result = _validator.TestValidate(model);
+
+        if (expected)
+        {
+            result.ShouldNotHaveValidationErrorFor(request => request.Icon);
+        }
+        else
+        {
+            result.ShouldHaveValidationErrorFor(request => request.Icon);
+        }
+    }
 }

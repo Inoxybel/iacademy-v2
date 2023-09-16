@@ -135,6 +135,7 @@ public class SummaryService : ISummaryService
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
             ChatId = chatCompletionResult.Data,
+            Icon = request.Icon,
             CreatedDate = DateTime.UtcNow,
             Theme = request.Theme,
             Topics = MapTopicsFromResponse(openAIResponse)
@@ -152,11 +153,11 @@ public class SummaryService : ISummaryService
         };
     }
 
-    public async Task<ServiceResult<string>> Save(SummaryRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> Save(SummaryRequest request, string newId = "", CancellationToken cancellationToken = default)
     {
         var summary = new Summary
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = string.IsNullOrEmpty(newId) ? Guid.NewGuid().ToString() : newId,
             OriginId = request.OriginId,
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
@@ -166,35 +167,7 @@ public class SummaryService : ISummaryService
             Category = request.Category,
             Subcategory = request.Subcategory,
             Theme = request.Theme,
-            Topics = request.Topics
-        };
-
-        var success = await _repository.Save(summary, cancellationToken);
-
-        if (!success)
-            return MakeErrorResult<string>("Failed to save.");
-
-        return new()
-        {
-            Success = true,
-            Data = summary.Id
-        };
-    }
-
-    public async Task<ServiceResult<string>> Save(SummaryRequest request, string newId, CancellationToken cancellationToken = default)
-    {
-        var summary = new Summary
-        {
-            Id = newId,
-            OriginId = request.OriginId,
-            OwnerId = request.OwnerId,
-            ConfigurationId = request.ConfigurationId,
-            ChatId = request.ChatId,
-            CreatedDate = DateTime.UtcNow,
-            IsAvaliable = request.IsAvaliable,
-            Category = request.Category,
-            Subcategory = request.Subcategory,
-            Theme = request.Theme,
+            Icon = request.Icon,
             Topics = request.Topics
         };
 

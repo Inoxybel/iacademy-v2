@@ -228,6 +228,7 @@ public class ContentService : IContentService
             Category = summary.Category,
             Subcategory = summary.Subcategory,
             Theme = summary.Theme,
+            Icon = summary.Icon,
             Topics = summary.Topics
         };
 

@@ -20,6 +20,7 @@ public class SummaryBuilder
         Category = "Category",
         Subcategory = "Subcategory",
         Theme = "Theme",
+        Icon = "Icon",
         Topics = new()
         {
             new TopicBuilder().Build()

@@ -33,6 +33,11 @@ public class Program
             });
         }
 
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.Limits.MaxRequestBodySize = null;
+        });
+
         ConfigureServices(builder.Services, builder.Configuration);
 
         var app = builder.Build();

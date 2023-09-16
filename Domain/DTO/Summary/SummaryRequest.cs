@@ -12,5 +12,6 @@ public class SummaryRequest
     public string Category { get; set; }
     public string Subcategory { get; set; }
     public string Theme { get; set; }
+    public string Icon { get; set; }
     public List<Topic> Topics { get; set; }
 }

@@ -36,6 +36,9 @@ public class SummaryRequestValidator : AbstractValidator<SummaryRequest>
             .NotEmpty().WithMessage("The Theme is required.")
             .MaximumLength(100).WithMessage("The Theme cannot exceed 100 characters.");
 
+        RuleFor(x => x.Icon)
+            .NotEmpty().WithMessage("The SVG Icon string is required.");
+
         RuleFor(x => x.Topics)
             .NotEmpty().WithMessage("Topics are required.")
             .Must(list => list.Count > 0).WithMessage("There must be at least one topic.")

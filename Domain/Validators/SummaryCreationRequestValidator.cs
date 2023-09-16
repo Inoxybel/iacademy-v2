@@ -29,6 +29,9 @@ public class SummaryCreationRequestValidator : AbstractValidator<SummaryCreation
         RuleFor(request => request.OwnerId)
             .NotEmpty().WithMessage("The owner ID is required.")
             .Length(36).WithMessage("The owner ID must be 36 characters long.");
+
+        RuleFor(x => x.Icon)
+            .NotEmpty().WithMessage("The SVG Icon string is required.");
     }
 }
 

@@ -82,7 +82,7 @@ public class SummaryController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _summaryService.Save(request, cancellationToken);
+        var result = await _summaryService.Save(request, string.Empty, cancellationToken);
 
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
