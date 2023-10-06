@@ -1,5 +1,5 @@
 ﻿using Domain.DTO;
-using Domain.Entities;
+using Domain.Entities.Chat;
 using Domain.Infra;
 using Domain.Services;
 
@@ -18,18 +18,14 @@ namespace Service
         public async Task<ServiceResult<ChatCompletion>> Get(string chatId, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(chatId))
-                return GetFailResponse("Invalid chatId.");
+                return ServiceResult<ChatCompletion>.MakeErrorResult("Invalid chatId.");
 
             var chat = await _repository.Get(chatId, cancellationToken);
 
             if (chat is null)
-                return GetFailResponse("Chat not found.");
+                return ServiceResult<ChatCompletion>.MakeErrorResult("Chat not found.");
 
-            return new()
-            {
-                Success = true,
-                Data = chat
-            };
+            return ServiceResult<ChatCompletion>.MakeSuccessResult(chat);
         }
 
         public async Task<ServiceResult<string>> Save(ChatCompletion chatCompletion, CancellationToken cancellationToken = default)
@@ -37,23 +33,9 @@ namespace Service
             var repositoryResult = await _repository.Save(chatCompletion, cancellationToken);
 
             if (string.IsNullOrEmpty(repositoryResult))
-                return new()
-                {
-                    Success = false,
-                    ErrorMessage = "Fail to save the chat."
-                };
+                return ServiceResult<string>.MakeErrorResult("Fail to save the chat.");
 
-            return new()
-            {
-                Success = true,
-                Data = repositoryResult
-            };
+            return ServiceResult<string>.MakeSuccessResult(repositoryResult);
         }
-
-        private static ServiceResult<ChatCompletion> GetFailResponse(string message) => new()
-        {
-            Success = false,
-            ErrorMessage = message
-        };
     }
 }

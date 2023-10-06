@@ -37,8 +37,6 @@ public class ContentRequestValidator : AbstractValidator<ContentRequest>
             .MaximumLength(200).WithMessage("The Title cannot be more than 200 characters long.");
 
         RuleFor(x => x.Body)
-            .NotEmpty().WithMessage("The Body is required.")
-            .Must(x => x != null && x.Count > 0).WithMessage("The Body must contain at least one item.")
-            .ForEach(rule => rule.SetValidator(new BodyValidator()));
+            .SetValidator(new BodyValidator());
     }
 }

@@ -1,35 +1,24 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Contents;
 
 namespace IAcademy.Test.Shared.Builders;
 
 public class BodyBuilder
 {
-    private Body body;
+    private readonly Body body;
 
     public BodyBuilder() => body = CreateDefault();
 
     private static Body CreateDefault() => new Body
     {
-        Content = "DefaultContent",
-        CreatedDate = DateTime.UtcNow,
-        DisabledDate = DateTime.MinValue
+        Contents = new()
+        {
+            new SubcontentBuilder().Build()
+        }
     };
 
-    public BodyBuilder WithContent(string content)
+    public BodyBuilder WithContents(List<Subcontent> subcontents)
     {
-        body.Content = content;
-        return this;
-    }
-
-    public BodyBuilder WithCreatedDate(DateTime createdDate)
-    {
-        body.CreatedDate = createdDate;
-        return this;
-    }
-
-    public BodyBuilder WithDisabledDate(DateTime disabledDate)
-    {
-        body.DisabledDate = disabledDate;
+        body.Contents = subcontents;
         return this;
     }
 

@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Configuration;
-using Domain.Entities;
+using Domain.Entities.Configuration;
 using Domain.Infra;
 using FluentAssertions;
 using IAcademy.Test.Shared.Builders;

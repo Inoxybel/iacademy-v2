@@ -47,7 +47,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest("Test request");
+            var result = await _service.DoRequest(new(), "Test request");
 
             result.Should().NotBeNull();
             result.Choices.Should().NotBeNullOrEmpty();
@@ -69,7 +69,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest("Test request");
+            var result = await _service.DoRequest(new(), "Test request");
 
             result.Should().NotBeNull();
             result.Choices.Should().BeNullOrEmpty();
@@ -91,7 +91,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest("Test request");
+            var result = await _service.DoRequest(new(), "Test request");
 
             _mockHttpMessageHandler.Protected().Verify(
                 "SendAsync", 

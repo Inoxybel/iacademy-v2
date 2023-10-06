@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Summary;
 
 namespace IAcademy.Test.Shared.Builders;
 
@@ -12,7 +12,8 @@ public class SubtopicBuilder
     {
         Index = "1.1",
         Title = "Title",
-        ContentId = "DefaultContentId"
+        ContentId = "DefaultContentId",
+        ExerciseId = "DefaultExerciseId"
     };
 
     public SubtopicBuilder WithIndex(string index)
@@ -30,6 +31,12 @@ public class SubtopicBuilder
     public SubtopicBuilder WithContentId(string contentId)
     {
         subtopic.ContentId = contentId;
+        return this;
+    }
+
+    public SubtopicBuilder WithExerciseId(string exerciseId)
+    {
+        subtopic.ExerciseId = exerciseId;
         return this;
     }
 

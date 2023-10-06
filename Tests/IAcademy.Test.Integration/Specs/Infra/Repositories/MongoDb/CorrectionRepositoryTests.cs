@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Feedback;
 using Domain.Infra;
 using FluentAssertions;
 using IAcademy.Test.Integration.Base;

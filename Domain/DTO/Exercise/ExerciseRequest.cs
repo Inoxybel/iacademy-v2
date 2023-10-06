@@ -1,5 +1,5 @@
 ﻿using CrossCutting.Enums;
-using Domain.Entities;
+using Domain.Entities.Exercise;
 
 namespace Domain.DTO.Exercise;
 
@@ -8,6 +8,7 @@ public class ExerciseRequest
     public string OwnerId { get; set; }
     public string CorrectionId { get; set; }
     public string ConfigurationId { get; set; }
+    public string SummaryId { get; set; }
     public ExerciseStatus Status { get; set; }
     public ExerciseType Type { get; set; }
     public DateTime SendedAt { get; set; }

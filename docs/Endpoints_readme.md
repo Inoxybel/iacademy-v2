@@ -112,6 +112,17 @@
 ## Criar conteúdo alternativo
 `POST` /api/ai/content/{contentId}/new-content
 
+| Campo | Tipo | Obrigatório | Descrição
+|:-------:|:------:|:-------------:|--
+| subcontentIndex | int | sim | Índice que representa a parte do conteúdo a ser recriado
+
+**Exemplo de corpo de request**
+```js
+{
+  "subcontentIndex": 2
+}
+```
+
 **Exemplo de corpo de response**
 ```js
 "07cd1867-05c2-431f-a2a7-eea9e935378c"
@@ -881,9 +892,13 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "title": "Aplicações do C#",
   "body": [
     {
-      "content": "C# é amplamente usado para desenvolver aplicativos de desktop, jogos, aplicativos web e serviços web. Ele é usado no desenvolvimento de jogos com o Unity game engine. Além disso, C# é a linguagem recomendada para o desenvolvimento de aplicativos para dispositivos que executam o sistema operacional Windows.",
-      "createdDate": "2023-09-08T20:56:03.499Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
+      "contents": [
+		{
+		  "content": "C# é amplamente usado para desenvolver aplicativos de desktop, jogos, aplicativos web e serviços web. Ele é usado no desenvolvimento de jogos com o Unity game engine. Além disso, C# é a linguagem recomendada para o desenvolvimento de aplicativos para dispositivos que executam o sistema operacional Windows.",
+		  "createdDate": "2023-09-08T20:56:03.499Z",
+		  "disabledDate": "0001-01-01T00:00:01.001Z"
+		}
+	  ]
     }
   ],
   "createdDate": "2023-09-08T20:47:26.157Z",
@@ -918,9 +933,13 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "title": "Aplicações do C#",
   "body": [
     {
-      "content": "C# é amplamente usado para desenvolver aplicativos de desktop, jogos, aplicativos web e serviços web. Ele é usado no desenvolvimento de jogos com o Unity game engine. Além disso, C# é a linguagem recomendada para o desenvolvimento de aplicativos para dispositivos que executam o sistema operacional Windows.",
-      "createdDate": "2023-09-08T20:56:03.499Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
+      "contents": [
+		{
+		  "content": "C# é amplamente usado para desenvolver aplicativos de desktop, jogos, aplicativos web e serviços web. Ele é usado no desenvolvimento de jogos com o Unity game engine. Além disso, C# é a linguagem recomendada para o desenvolvimento de aplicativos para dispositivos que executam o sistema operacional Windows.",
+		  "createdDate": "2023-09-08T20:56:03.499Z",
+		  "disabledDate": "0001-01-01T00:00:01.001Z"
+		}
+	  ]
     }
   ],
   "createdDate": "2023-09-08T20:47:26.157Z",
@@ -951,7 +970,8 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
 | theme           | string | sim        | Tema do Conteúdo |
 | subtopicIndex   | string | sim        | Índice do subtema do tema |
 | title           | string | sim        | Título do Tema |
-| body            | lista  | sim        | Lista de datas |
+| body            | object  | sim        | Objeto contento os conteúdos |
+| contents         | list | sim        | Lista de conteúdos |
 | content         | string | sim        | Texto do usuário referente ao conteúdo |
 | createdDate     | string | sim        | Data em que o conteúdo foi criado |
 | disabledDate    | string | sim        | Data em que o conteúdo foi desabilitado |
@@ -970,13 +990,17 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "title": "Introdução ao Python",
   "body": [
     {
-      "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum em 1991. Python é uma linguagem de propósito geral com foco na legibilidade do código, tendo uma sintaxe que permite aos programadores expressar conceitos em menos linhas de código do que seria possível em linguagens como C++ ou Java.",
-      "createdDate": "2023-09-04T21:32:32.900Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
+	  "contents": [
+		{
+		  "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum em 1991. Python é uma linguagem de propósito geral com foco na legibilidade do código, tendo uma sintaxe que permite aos programadores expressar conceitos em menos linhas de código do que seria possível em linguagens como C++ ou Java.",
+		  "createdDate": "2023-09-08T20:56:03.499Z",
+		  "disabledDate": "0001-01-01T00:00:01.001Z"
+		}
+	  ]
     }
   ],
   "createdDate": "2023-09-04T21:32:32.900Z",
-  "updatedDate": "2023-09-04T21:32:32.900Z",
+  "updatedDate": "2023-09-04T21:32:32.900Z"
 }
 ```
 
@@ -1002,7 +1026,8 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
 | theme           | string | sim        | Tema do Conteúdo |
 | subtopicIndex   | string | sim        | Índice do subtema do tema |
 | title           | string | sim        | Título do Tema |
-| body            | lista  | sim        | Lista de datas |
+| body            | object  | sim        | Objeto contento os conteúdos |
+| contents         | list | sim        | Lista de conteúdos |
 | content         | string | sim        | Texto do usuário referente ao conteúdo |
 | createdDate     | string | sim        | Data em que o conteúdo foi criado |
 | disabledDate    | string | sim        | Data em que o conteúdo foi desabilitado |
@@ -1021,15 +1046,18 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "theme": "Python",
   "subtopicIndex": "1.1",
   "title": "Introdução ao Python",
-  "body": [
-    {
-      "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum em 1991. Python é uma linguagem de propósito geral com foco na legibilidade do código, tendo uma sintaxe que permite aos programadores expressar conceitos em menos linhas de código do que seria possível em linguagens como C++ ou Java.",
-      "createdDate": "2023-09-04T21:32:32.900Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
-    }
-  ],
+  "body":
+  {
+	"contents": [
+	  {
+		"content": "C# é amplamente usado para desenvolver aplicativos de desktop, jogos, aplicativos web e serviços web. Ele é usado no desenvolvimento de jogos com o Unity game engine. Além disso, C# é a linguagem recomendada para o desenvolvimento de aplicativos para dispositivos que executam o sistema operacional Windows.",
+		"createdDate": "2023-09-08T20:56:03.499Z",
+		"disabledDate": "0001-01-01T00:00:01.001Z"
+	  }
+	]
+  },
   "createdDate": "2023-09-04T21:32:32.900Z",
-  "updatedDate": "2023-09-04T21:32:32.900Z",
+  "updatedDate": "2023-09-04T21:32:32.900Z"
 }
 ]
 ```
@@ -1056,7 +1084,8 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
 | theme     | string | sim       |Tema do Conteúdo  |
 | subtopicIndex   | string | sim       |Índice do subtema do tema  |
 | title     | string | sim       |Título do Tema |
-| body | list   | sim     | Lista de datas e o conteúdo do tema |
+| body            | object  | sim        | Objeto contento os conteúdos |
+| contents         | list | sim        | Lista de conteúdos |
 | content | string   | sim     | Texto do usuário referente ao conteúdo |
 | createdDate        | object | sim     | Data em que o conteúdo foi criado |
 | disabledDate        | object | sim     | Data em que o conteúdo foi desabilitado |
@@ -1072,12 +1101,18 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "theme": "Python",
   "subtopicIndex": "1.1",
   "title": "Introdução ao Python",
-  "body": [
-    {
-      "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi lançada por Guido van Rossum em 1991. É uma linguagem de fácil aprendizado e possui uma sintaxe clara e legível. É muito utilizada em análise de dados, inteligência artificial, aprendizado de máquina e desenvolvimento web.",
-      "createdDate": "2023-09-04T21:32:32.900Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
-    }
+  "body":
+  {
+    "contents": [
+	  {
+		"content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum em 1991. Python é uma linguagem de propósito geral com foco na legibilidade do código, tendo uma sintaxe que permite aos programadores expressar conceitos em menos linhas de código do que seria possível em linguagens como C++ ou Java.",
+		"createdDate": "2023-09-08T20:56:03.499Z",
+		"disabledDate": "0001-01-01T00:00:01.001Z"
+	  }
+	]
+  },
+  "createdDate": "2023-09-08T20:56:03.499Z",
+  "disabledDate": "0001-01-01T00:00:01.001Z"
 }
 ```
 
@@ -1108,7 +1143,8 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
 | theme     | string | sim       |Tema do Conteúdo  |
 | subtopicIndex   | string | sim       |Índice do subtema do tema  |
 | title     | string | sim       |Título do Tema |
-| body | list   | sim     | Lista de datas e o conteúdo do tema |
+| body            | object  | sim        | Objeto contento os conteúdos |
+| contents         | list | sim        | Lista de conteúdos |
 | content | string   | sim     | Texto do usuário referente ao conteúdo |
 | createdDate        | object | sim     | Data em que o conteúdo foi criado |
 | disabledDate        | object | sim     | Data em que o conteúdo foi desabilitado |
@@ -1124,13 +1160,19 @@ a448ba24-2df3-447b-a455-4a33e08ab2e9
   "theme": "Python",
   "subtopicIndex": "1.1",
   "title": "Introdução ao Python",
-  "body": [
-    {
-      "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum durante 1985- 1990. Python é projetado para ser fácil de ler enquanto ainda fornece um grande controle ao programador. Uma característica notável de Python é o seu indentação de blocos de código, que é feita para aumentar a legibilidade do código.",
-      "createdDate": "2023-09-08T20:56:03.499Z",
-      "disabledDate": "0001-01-01T00:00:01.001Z"
-    }
-  ]
+  "body":
+  {
+    "contents": [
+	  {
+	    "content": "Python é uma linguagem de programação de alto nível, interpretada, de script, imperativa, orientada a objetos, funcional, de tipagem dinâmica e forte. Foi criada por Guido van Rossum em 1991. Python é uma linguagem de propósito geral com foco na legibilidade do código, tendo uma sintaxe que permite aos programadores expressar conceitos em menos linhas de código do que seria possível em linguagens como C++ ou Java.",
+	    "createdDate": "2023-09-08T20:56:03.499Z",
+	    "disabledDate": "0001-01-01T00:00:01.001Z"
+	  }
+    ]
+  },
+  ,
+  "createdDate": "2023-09-08T20:56:03.499Z",
+  "disabledDate": "0001-01-01T00:00:01.001Z"
 }
 ]
 ```

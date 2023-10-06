@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Summary;
 
 namespace IAcademy.Test.Shared.Builders;
 

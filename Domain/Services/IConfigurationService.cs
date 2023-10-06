@@ -1,6 +1,6 @@
 ﻿using Domain.DTO.Configuration;
 using Domain.DTO;
-using Domain.Entities;
+using Domain.Entities.Configuration;
 
 namespace Domain.Services;
 

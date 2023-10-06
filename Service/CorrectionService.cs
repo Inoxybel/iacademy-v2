@@ -1,7 +1,9 @@
 ﻿using CrossCutting.Enums;
 using Domain.DTO;
 using Domain.DTO.Correction;
-using Domain.Entities;
+using Domain.Entities.Configuration;
+using Domain.Entities.Exercise;
+using Domain.Entities.Feedback;
 using Domain.Infra;
 using Domain.Services;
 using Newtonsoft.Json;
@@ -17,26 +19,29 @@ public class CorrectionService : ICorrectionService
     private readonly ICorrectionRepository _correctionRepository;
     private readonly IExerciseRepository _exerciseRepository;
     private readonly IConfigurationRepository _configurationRepository;
+    private readonly ISummaryService _summaryService;
     private readonly IOpenAIService _openIAService;
 
     public CorrectionService(
         ICorrectionRepository correctionRepository,
         IExerciseRepository exerciseRepository,
         IConfigurationRepository configurationRepository,
+        ISummaryService summaryService,
         IOpenAIService openIAService)
     {
         _correctionRepository = correctionRepository;
         _exerciseRepository = exerciseRepository;
         _configurationRepository = configurationRepository;
+        _summaryService = summaryService;
         _openIAService = openIAService;
     }
 
-    public async Task<ServiceResult<Correction>> Get(string correctionId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<Correction>> Get(string correctionId, string ownerId, CancellationToken cancellationToken = default)
     {
         var correction = await _correctionRepository.Get(correctionId, cancellationToken);
 
         if (correction is null)
-            return MakeErrorResult<Correction>("Correction not found.");
+            return ServiceResult<Correction>.MakeErrorResult("Correction not found.");
 
         return new()
         { 
@@ -45,15 +50,18 @@ public class CorrectionService : ICorrectionService
         };
     }
 
-    public async Task<ServiceResult<Correction>> MakeCorrection(string exerciseId, CreateCorrectionRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<Correction>> MakeCorrection(string exerciseId, string ownerId, CreateCorrectionRequest request, CancellationToken cancellationToken = default)
     {
         var exerciseRecovered = await _exerciseRepository.Get(exerciseId, cancellationToken);
 
         if (exerciseRecovered is null)
-            return MakeErrorResult<Correction>("Failed to get exercise.");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to get exercise.");
+
+        if (exerciseRecovered.OwnerId != ownerId)
+            return ServiceResult<Correction>.MakeErrorResult("You are not permitted to request correction for this exercise.");
 
         if (exerciseRecovered.Status != ExerciseStatus.WaitingToDo)
-            return MakeErrorResult<Correction>("There is already a correction process for this exercise.");
+            return ServiceResult<Correction>.MakeErrorResult("There is already a correction process for this exercise.");
 
         exerciseRecovered.Status = ExerciseStatus.WaitingCorrection;
         exerciseRecovered.SendedAt = DateTime.UtcNow;
@@ -63,53 +71,57 @@ public class CorrectionService : ICorrectionService
         var updateExerciseResult = await _exerciseRepository.Update(exerciseId, exerciseRecovered, cancellationToken);
 
         if (!updateExerciseResult)
-            return MakeErrorResult<Correction>("Failed to update exercise.");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to update exercise.");
 
         var configurationRecovered = await _configurationRepository.Get(exerciseRecovered.ConfigurationId, cancellationToken);
 
         if (configurationRecovered is null)
-            return MakeErrorResult<Correction>("Failed to get configurations.");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to get configurations.");
 
         var correction = await GetCorrectionFromOpenAI(exerciseRecovered.Exercises, configurationRecovered.Correction);
 
         if (correction.Corrections is null || !correction.Corrections.Any())
-            return MakeErrorResult<Correction>("Failed to deserialize IA response");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to deserialize IA response");
 
         correction = CompleteCorrectionAttributes(correction, exerciseRecovered);
 
         var correctionSaveResult = await _correctionRepository.Save(correction, cancellationToken);
 
+        var progressSaveResult = await _summaryService.UpdateProgress(exerciseRecovered.SummaryId, exerciseRecovered.TopicIndex, cancellationToken);
+
+        if (!progressSaveResult.Success)
+            return ServiceResult<Correction>.MakeErrorResult("Failed to update progress");
+
         if (!correctionSaveResult)
-            return MakeErrorResult<Correction>("Failed to save correction");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to save correction");
 
         var newExercise = UpdateExercise(correction.Id, exerciseRecovered);
 
         var exerciseUpdateResult = await _exerciseRepository.Update(exerciseId, newExercise, cancellationToken);
 
         if (!exerciseUpdateResult)
-            return MakeErrorResult<Correction>("Failed to update exercise");
+            return ServiceResult<Correction>.MakeErrorResult("Failed to update exercise");
 
-        var incorrectExercises = correction.Corrections.Where(c => c.IsCorrect == false).ToList();
-
-        if (incorrectExercises.Any())
+        if (await _summaryService.ShouldGeneratePendency(exerciseRecovered.SummaryId, ownerId, cancellationToken))
         {
-            var oldExercises = MakePendencyRequest(incorrectExercises);
+            var incorrectExercises = correction.Corrections.Where(c => c.IsCorrect == false).ToList();
 
-            var pendencyExercise = await RequestPendencyExercicesToAI(oldExercises, configurationRecovered.Pendency);
+            if (incorrectExercises.Any())
+            {
+                var oldExercises = MakePendencyRequest(incorrectExercises);
 
-            pendencyExercise = CompletePendencyExerciseValues(pendencyExercise, exerciseRecovered);
+                var pendencyExercise = await RequestPendencyExercicesToAI(oldExercises, configurationRecovered.Pendency);
 
-            var savePendencyResult = await _exerciseRepository.Save(pendencyExercise, cancellationToken);
+                pendencyExercise = CompletePendencyExerciseValues(pendencyExercise, exerciseRecovered);
 
-            if (!savePendencyResult)
-                return MakeErrorResult<Correction>("Failed to save pendency");
+                var savePendencyResult = await _exerciseRepository.Save(pendencyExercise, cancellationToken);
+
+                if (!savePendencyResult)
+                    return ServiceResult<Correction>.MakeErrorResult("Failed to save pendency");
+            }
         }
 
-        return new ServiceResult<Correction>
-        {
-            Data = correction,
-            Success = true
-        };
+        return ServiceResult<Correction>.MakeSuccessResult(correction);
     }
 
     public async Task<ServiceResult<bool>> Update(string correctionId, CorrectionUpdateRequest request, CancellationToken cancellationToken = default)
@@ -126,20 +138,14 @@ public class CorrectionService : ICorrectionService
         var success = await _correctionRepository.Update(correctionId, correction, cancellationToken);
 
         if (!success)
-            return MakeErrorResult<bool>("Failed to update.");
+            return ServiceResult<bool>.MakeErrorResult("Failed to update.");
 
-        return new()
-        {
-            Data = true,
-            Success = true
-        };
+        return ServiceResult<bool>.MakeSuccessResult(true);
     }
 
     private async Task<Exercise> RequestPendencyExercicesToAI(string wrongExercisesStringfied, InputProperties configurations)
     {
-        var requestBody = $"{configurations.InitialInput} {wrongExercisesStringfied} {configurations.FinalInput}";
-
-        var openAIResponse = await _openIAService.DoRequest(requestBody);
+        var openAIResponse = await _openIAService.DoRequest(configurations, wrongExercisesStringfied);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
             return new Exercise();
@@ -174,9 +180,7 @@ public class CorrectionService : ICorrectionService
     {
         var exercisesJson = MakeCorrectionRequest(exercises);
 
-        var message = $"{configurations.InitialInput} \n\n {exercisesJson} \n\n {configurations.FinalInput}";
-
-        var response = await _openIAService.DoRequest(message);
+        var response = await _openIAService.DoRequest(configurations, exercisesJson);
 
         if (string.IsNullOrEmpty(response.Id))
             return new Correction();
@@ -278,14 +282,8 @@ public class CorrectionService : ICorrectionService
         pendencyExercise.ConfigurationId = exerciseRecovered.ConfigurationId;
         pendencyExercise.TopicIndex = exerciseRecovered.TopicIndex;
         pendencyExercise.ContentId = exerciseRecovered.ContentId;
+        pendencyExercise.Title = exerciseRecovered.Title;
 
         return pendencyExercise;
     }
-
-    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
-    {
-        Success = false,
-        ErrorMessage = message,
-        Data = default
-    };
 }

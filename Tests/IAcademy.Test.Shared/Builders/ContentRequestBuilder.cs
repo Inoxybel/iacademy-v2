@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Content;
-using Domain.Entities;
+using Domain.Entities.Contents;
 
 namespace IAcademy.Test.Shared.Builders;
 
@@ -18,7 +18,7 @@ public class ContentRequestBuilder
         Theme = "DefaultTheme",
         SubtopicIndex = "1",
         Title = "DefaultTitle",
-        Body = new List<Body>()
+        Body = new Body()
     };
 
     public ContentRequestBuilder WithOwnerId(string ownerId)
@@ -63,7 +63,7 @@ public class ContentRequestBuilder
         return this;
     }
 
-    public ContentRequestBuilder WithBody(List<Body> body)
+    public ContentRequestBuilder WithBody(Body body)
     {
         contentRequest.Body = body;
         return this;

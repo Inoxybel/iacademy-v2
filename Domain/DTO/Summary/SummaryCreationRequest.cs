@@ -1,6 +1,4 @@
-﻿
-
-namespace Domain.DTO.Summary;
+﻿namespace Domain.DTO.Summary;
 
 public class SummaryCreationRequest
 {
@@ -9,5 +7,6 @@ public class SummaryCreationRequest
     public string Subcategory { get; set; }
     public string Icon { get; set; }
     public string ConfigurationId { get; set; }
+    public bool ShouldGeneratePendency { get; set; }
     public string OwnerId { get; set; }
 }

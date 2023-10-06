@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Configuration;
 using Domain.Validators;
 using FluentValidation.TestHelper;
 

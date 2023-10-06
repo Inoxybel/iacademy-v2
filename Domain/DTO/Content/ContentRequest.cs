@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Contents;
 
 namespace Domain.DTO.Content;
 
@@ -11,5 +11,5 @@ public class ContentRequest
     public string Theme { get; set; }
     public string SubtopicIndex { get; set; }
     public string Title { get; set; }
-    public List<Body> Body { get; set; }
+    public Body Body { get; set; }
 }

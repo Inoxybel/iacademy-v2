@@ -13,15 +13,15 @@ public static class ServiceProviderExtensions
         services.AddOptions<OpenAIOptions>()
             .Configure(serviceOptions =>
             {
-                serviceOptions.Model = configuration.GetValue<string>($"IAcademy:ExternalServices:OpenAI:{OpenAIOptions.ModelKey}");
+                serviceOptions.Model = configuration.GetValue<string>($"ExternalServices:OpenAI:{OpenAIOptions.ModelKey}");
             });
 
         services.AddHttpClient<IOpenAIService, OpenAIService>(opt =>
         {
-            opt.BaseAddress = new Uri(configuration.GetValue<string>("IAcademy:ExternalServices:OpenAI:BaseUrl"));
+            opt.BaseAddress = new Uri(configuration.GetValue<string>("ExternalServices:OpenAI:BaseUrl"));
             opt.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
-                configuration.GetValue<string>("IAcademy:ExternalServices:OpenAI:SecretKey")
+                configuration.GetValue<string>("ExternalServices:OpenAI:SecretKey")
             );
         });
 

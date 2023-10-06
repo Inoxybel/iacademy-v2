@@ -1,5 +1,4 @@
 ﻿using Domain.DTO;
-using Domain.Entities;
 using Domain.Infra;
 using Domain.Services;
 using Moq;
@@ -9,6 +8,10 @@ using FluentAssertions;
 using Domain.DTO.Content;
 using Service.Integrations.OpenAI.DTO;
 using IAcademy.Test.Shared.Builders;
+using Domain.Entities.Exercise;
+using Domain.Entities.Configuration;
+using Domain.Entities.Contents;
+using Domain.Entities.Chat;
 
 namespace IAcademy.Test.Unit.Services
 {
@@ -18,6 +21,7 @@ namespace IAcademy.Test.Unit.Services
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
         private readonly Mock<IContentRepository> _mockContentRepository;
         private readonly Mock<IOpenAIService> _mockOpenAIService;
+        private Configuration config;
 
         private readonly GeneratorService _exerciseGeneratorService;
 
@@ -82,7 +86,7 @@ namespace IAcademy.Test.Unit.Services
 
             var openAIResponse = new OpenAIResponse();
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
             var result = await _exerciseGeneratorService.MakeExercise("testContentId");
@@ -121,7 +125,7 @@ namespace IAcademy.Test.Unit.Services
         {
             SetupDefaultMocks();
 
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
+            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
 
             result.Success.Should().BeTrue();
         }
@@ -134,23 +138,7 @@ namespace IAcademy.Test.Unit.Services
             _mockContentRepository.Setup(m => m.Get(It.IsAny<string>(), default))
                 .ReturnsAsync((Content)null);
 
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
-
-            result.Success.Should().BeFalse();
-        }
-
-        [Fact]
-        public async Task MakePendency_SHOULD_Return_Error_WHEN_ConfigurationService_Fails()
-        {
-            SetupDefaultMocks();
-
-            _mockConfigurationService.Setup(m => m.Get(It.IsAny<string>(), default))
-                .ReturnsAsync(new ServiceResult<Configuration> 
-                { 
-                    Success = false 
-                });
-
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
+            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
 
             result.Success.Should().BeFalse();
         }
@@ -162,10 +150,10 @@ namespace IAcademy.Test.Unit.Services
 
             var openAIResponse = new OpenAIResponse();
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
+            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
 
             result.Success.Should().BeFalse();
         }
@@ -178,7 +166,7 @@ namespace IAcademy.Test.Unit.Services
             _mockExerciseRepository.Setup(m => m.Save(It.IsAny<Exercise>(), default))
                 .ReturnsAsync(false);
 
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
+            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
 
             result.Success.Should().BeFalse();
         }
@@ -191,15 +179,15 @@ namespace IAcademy.Test.Unit.Services
             _mockContentRepository.Setup(m => m.Update(It.IsAny<string>(), It.IsAny<ContentRequest>(), default))
                 .ReturnsAsync(false);
 
-            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise");
+            var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
 
             result.Success.Should().BeFalse();
         }
 
         private void SetupDefaultMocks()
         {
+            config = new ConfigurationBuilder().Build();
             var content = new ContentBuilder().Build();
-            var config = new ConfigurationBuilder().Build();
             var openAIResponse = new OpenAIResponseBuilder()
                 .WithChoices(new List<Choices>()
                 {
@@ -227,7 +215,7 @@ namespace IAcademy.Test.Unit.Services
                     Data = config 
                 });
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
             _mockExerciseRepository.Setup(m => m.Save(It.IsAny<Exercise>(), default))

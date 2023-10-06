@@ -1,6 +1,5 @@
 ﻿using Domain.DTO.Summary;
 using Domain.DTO;
-using Domain.Entities;
 using Service;
 using Domain.Infra;
 using FluentAssertions;
@@ -8,6 +7,9 @@ using Moq;
 using Domain.Services;
 using Service.Integrations.OpenAI.Interfaces;
 using IAcademy.Test.Shared.Builders;
+using Domain.Entities.Summary;
+using Domain.Entities.Configuration;
+using Domain.Entities.Chat;
 
 namespace IAcademy.Test.Unit.Services
 {
@@ -18,19 +20,22 @@ namespace IAcademy.Test.Unit.Services
         private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<IOpenAIService> _mockOpenAIService;
         private readonly Mock<IChatCompletionsService> _mockChatCompletionsService;
+        private readonly Mock<ICompanyService> _mockCompanyService;
 
         public SummaryServiceTests()
         {
-            _mockSummaryRepository = new Mock<ISummaryRepository>();
-            _mockConfigurationService = new Mock<IConfigurationService>();
-            _mockOpenAIService = new Mock<IOpenAIService>();
-            _mockChatCompletionsService = new Mock<IChatCompletionsService>();
+            _mockSummaryRepository = new();
+            _mockConfigurationService = new();
+            _mockOpenAIService = new();
+            _mockChatCompletionsService = new();
+            _mockCompanyService = new();
 
             _summaryService = new SummaryService(
                 _mockSummaryRepository.Object,
                 _mockConfigurationService.Object,
                 _mockOpenAIService.Object,
-                _mockChatCompletionsService.Object
+                _mockChatCompletionsService.Object,
+                _mockCompanyService.Object
             );
         }
 
@@ -66,13 +71,13 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllByCategory_SHOULD_Return_Success_WHEN_SummariesExist()
         {
             var category = "testCategory";
-            _mockSummaryRepository.Setup(m => m.GetAllByCategory(category, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<List<string>>(), category, false, default))
                 .ReturnsAsync(new List<Summary> 
                 { 
                     new SummaryBuilder().Build() 
                 });
 
-            var result = await _summaryService.GetAllByCategory(category);
+            var result = await _summaryService.GetAllByCategory(category, "document", "companyRef");
 
             result.Success.Should().BeTrue();
             result.Data.Count.Should().BeGreaterThan(0);
@@ -83,10 +88,10 @@ namespace IAcademy.Test.Unit.Services
         {
             var category = "testCategory";
 
-            _mockSummaryRepository.Setup(m => m.GetAllByCategory(category, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<List<string>>(), category, false, default))
                 .ReturnsAsync(new List<Summary>());
 
-            var result = await _summaryService.GetAllByCategory(category);
+            var result = await _summaryService.GetAllByCategory(category, "document", "companyRef");
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summary not found.");
@@ -97,13 +102,13 @@ namespace IAcademy.Test.Unit.Services
         {
             var category = "testCategory";
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(category, subcategory, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<List<string>>(), category, subcategory, false, default))
                 .ReturnsAsync(new List<Summary> 
                 { 
                     new SummaryBuilder().Build() 
                 });
 
-            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory);
+            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, "document", "companyRef");
 
             result.Success.Should().BeTrue();
             result.Data.Count.Should().BeGreaterThan(0);
@@ -115,16 +120,14 @@ namespace IAcademy.Test.Unit.Services
             var category = "testCategory";
             var subcategory = "testSubcategory";
 
-            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(category, subcategory, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<List<string>>(), category, subcategory, false, default))
                 .ReturnsAsync(new List<Summary>());
 
-            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory);
+            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, "document", "companyRef");
 
             result.Success.Should().BeFalse();
-            result.ErrorMessage.Should().Be("Summary not found.");
+            result.ErrorMessage.Should().Be("Summaries not found.");
         }
-
-
 
         [Fact]
         public async Task RequestCreationToAI_SHOULD_Return_Failure_WHEN_ConfigurationNotFound()
@@ -165,7 +168,7 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllBySubcategory_SHOULD_Return_Success_WHEN_SummariesExist()
         {
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(subcategory, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<List<string>>(), subcategory, false, default))
                 .ReturnsAsync(new List<Summary> 
                 { 
                     new SummaryBuilder()
@@ -173,7 +176,7 @@ namespace IAcademy.Test.Unit.Services
                         .Build() 
                 });
 
-            var result = await _summaryService.GetAllBySubcategory(subcategory);
+            var result = await _summaryService.GetAllBySubcategory(subcategory, "document", "companyRef");
 
             result.Success.Should().BeTrue();
             result.Data.Count.Should().BeGreaterThan(0);
@@ -183,10 +186,10 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllBySubcategory_SHOULD_Return_Failure_WHEN_NoSummariesExist()
         {
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(subcategory, false, default))
+            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<List<string>>(), subcategory, false, default))
                 .ReturnsAsync(new List<Summary>());
 
-            var result = await _summaryService.GetAllBySubcategory(subcategory);
+            var result = await _summaryService.GetAllBySubcategory(subcategory, "document", "companyRef");
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summary not found.");
@@ -307,7 +310,7 @@ namespace IAcademy.Test.Unit.Services
                     Data = "chatId"
                 });
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
                 .ReturnsAsync(new OpenAIResponseBuilder()
                     .WithChoices(new List<Choices>()
                     {

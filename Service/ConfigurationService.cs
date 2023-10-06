@@ -1,6 +1,6 @@
 ﻿using Domain.DTO;
 using Domain.DTO.Configuration;
-using Domain.Entities;
+using Domain.Entities.Configuration;
 using Domain.Infra;
 using Domain.Services;
 
@@ -20,17 +20,9 @@ public class ConfigurationService : IConfigurationService
         var configuration = await _repository.Get(configurationId, cancellationToken);
 
         if (configuration is null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Configuration not finded."
-            };
+            return ServiceResult<Configuration>.MakeErrorResult("Configuration not finded.");
 
-        return new()
-        {
-            Success = true,
-            Data = configuration
-        };
+        return ServiceResult<Configuration>.MakeSuccessResult(configuration);
     }
 
     public async Task<ServiceResult<ConfigurationResponse>> Create(ConfigurationRequest configuration, CancellationToken cancellationToken = default)
@@ -46,14 +38,14 @@ public class ConfigurationService : IConfigurationService
             Pendency = configuration.Pendency
         };
 
+        var response = new ConfigurationResponse
+        {
+            Id = newConfiguration.Id
+        };
+
         bool isSuccess = await _repository.Save(newConfiguration, cancellationToken);
 
-        return new()
-        {
-            Success = isSuccess,
-            ErrorMessage = isSuccess ? string.Empty : "Error on save configuration",
-            Data = isSuccess ? new ConfigurationResponse { Id = newConfiguration.Id } : null
-        };
+        return isSuccess ? ServiceResult<ConfigurationResponse>.MakeSuccessResult(response) : ServiceResult<ConfigurationResponse>.MakeErrorResult("Error on save configuration");
     }
 
     public async Task<ServiceResult<bool>> Update(string configurationId, ConfigurationRequest configuration, CancellationToken cancellationToken = default)
@@ -61,19 +53,10 @@ public class ConfigurationService : IConfigurationService
         var existingConfiguration = await _repository.Get(configurationId, cancellationToken);
 
         if (existingConfiguration == null)
-            return new()
-            {
-                Success = false,
-                ErrorMessage = "Configuration not finded."
-            };
+            return ServiceResult<bool>.MakeErrorResult("Configuration not finded.");
 
         var isSuccess = await _repository.Update(configurationId, configuration, cancellationToken);
 
-        return new()
-        {
-            Success = isSuccess,
-            ErrorMessage = isSuccess ? string.Empty : "Error on update configuration",
-            Data = isSuccess
-        };
+        return isSuccess ? ServiceResult<bool>.MakeSuccessResult(isSuccess) : ServiceResult<bool>.MakeErrorResult("Error on update configuration");
     }
 }

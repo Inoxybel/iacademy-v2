@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Chat;
 using Service.Integrations.OpenAI.DTO;
 
 namespace IAcademy.Test.Shared.Builders

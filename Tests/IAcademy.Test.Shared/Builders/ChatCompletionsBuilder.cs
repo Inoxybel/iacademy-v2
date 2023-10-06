@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Chat;
 
 namespace IAcademy.Test.Shared.Builders;
 

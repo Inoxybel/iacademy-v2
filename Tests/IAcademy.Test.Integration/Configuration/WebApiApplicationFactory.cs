@@ -24,12 +24,14 @@ public class WebApiApplicationFactory : WebApplicationFactory<Program>
         return base.CreateHost(builder);
     }
 
-    public void ConfigureDatabaseInstanceOptions(IServiceCollection services)
+    public static void ConfigureDatabaseInstanceOptions(IServiceCollection services)
     {
         services.Configure<DatabaseInstanceOptions>(options =>
         {
             options.ConnectionString = "mongodb://localhost:27017";
             options.Name = "IAcademyDB";
+            options.UserManagerDBName = "IAcademyUsersDB";
+            options.UserManagerConnectionString = "mongodb://localhost:27017";
         });
     }
 

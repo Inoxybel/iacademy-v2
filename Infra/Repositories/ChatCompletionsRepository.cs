@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Chat;
 using Domain.Infra;
 using MongoDB.Driver;
 

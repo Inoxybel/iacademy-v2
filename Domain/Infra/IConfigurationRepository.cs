@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Configuration;
-using Domain.Entities;
+using Domain.Entities.Configuration;
 
 namespace Domain.Infra;
 

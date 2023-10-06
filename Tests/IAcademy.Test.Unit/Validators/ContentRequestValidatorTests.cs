@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Content;
-using Domain.Entities;
+using Domain.Entities.Contents;
 using Domain.Validators;
 using FluentValidation.TestHelper;
 
@@ -145,12 +145,21 @@ public class ContentRequestValidatorTests
     {
         var model = new ContentRequest 
         { 
-            Body = new List<Body> 
+            Body = new Body 
             { 
-                new Body 
+                Contents = new List<Subcontent>() 
                 { 
-                    Content = "short", 
-                    CreatedDate = DateTime.Now
+                    new Subcontent()
+                    {
+                        SubcontentHistory = new List<SubcontentHistory>()
+                        {
+                            new SubcontentHistory()
+                            {
+                                Content = "short",
+                                CreatedDate = DateTime.Now
+                            }
+                        }
+                    }
                 } 
             } 
         };

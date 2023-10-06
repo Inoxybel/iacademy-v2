@@ -1,11 +1,13 @@
 ﻿using CrossCutting.Enums;
 using Domain.DTO;
-using Domain.Entities;
 using Domain.Infra;
 using Domain.Services;
 using Service.Integrations.OpenAI.Interfaces;
 using CrossCutting.Extensions;
 using Domain.DTO.Content;
+using Domain.Entities.Exercise;
+using Domain.Entities.Configuration;
+using Domain.Entities.Contents;
 
 namespace Service;
 
@@ -33,96 +35,35 @@ public class GeneratorService : IGeneratorService
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
-            return MakeErrorResult<string>("Error while getting content");
+            return ServiceResult<string>.MakeErrorResult("Error while getting content");
 
         var configurationGetResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
         if (!configurationGetResult.Success)
-            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
+            return ServiceResult<string>.MakeErrorResult(configurationGetResult.ErrorMessage);
 
-        return await Execute(content, configurationGetResult.Data, cancellationToken);
+        return await Execute(content, configurationGetResult.Data.Exercise, configurationGetResult.Data.Id, cancellationToken);
     }
 
-    public async Task<ServiceResult<string>> MakeExercise(Content content, Configuration configuration, CancellationToken cancellationToken = default) =>
-        await Execute(content, configuration, cancellationToken);
+    public async Task<ServiceResult<string>> MakeExercise(Content content, InputProperties configuration, string configurationId, CancellationToken cancellationToken = default) =>
+        await Execute(content, configuration, configurationId, cancellationToken);
 
-    private async Task<ServiceResult<string>> Execute(Content content, Configuration configuration, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> MakePendency(string contentId, string correction, Configuration configuration, CancellationToken cancellationToken = default)
     {
-        var openAIRequest = MakeOpenAIRequestToExercise(configuration.Exercise, content.Body.First(c => c.DisabledDate == DateTime.MinValue).Content);
+        var content = await _contentRepository.Get(contentId, cancellationToken);
 
-        var openAIResponse = await _openAIService.DoRequest(openAIRequest);
+        if (content is null)
+            return ServiceResult<string>.MakeErrorResult("Error while getting content");
+
+        var openAIResponse = await _openAIService.DoRequest(configuration.Pendency, correction);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult<string>("Error to get OpenAI response");
+            return ServiceResult<string>.MakeErrorResult("Error to get OpenAI response");
 
         var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
         exercise.Id = Guid.NewGuid().ToString();
         exercise.OwnerId = content.OwnerId;
         exercise.ConfigurationId = configuration.Id;
-        exercise.ContentId = content.Id;
-        exercise.Status = ExerciseStatus.WaitingToDo;
-        exercise.Type = ExerciseType.Default;
-        exercise.TopicIndex = content.SubtopicIndex;
-        exercise.Title = content.Title;
-
-        var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
-
-        if (!exerciseSaveResponse)
-            return MakeErrorResult<string>("Error to save exercise");
-
-        content.ExerciseId = exercise.Id;
-
-        var contentRequest = new ContentRequest()
-        {
-            OwnerId = content.OwnerId,
-            SummaryId = content.SummaryId,
-            ConfigurationId = content.ConfigurationId,
-            ExerciseId = exercise.Id,
-            Theme = content.Theme,
-            SubtopicIndex = content.SubtopicIndex,
-            Title = content.Title,
-            Body = content.Body
-        };
-
-        var contentSaveResponse = await _contentRepository.Update(content.Id, contentRequest, cancellationToken);
-
-        if (!contentSaveResponse)
-            return MakeErrorResult<string>("Error to update content");
-
-        return new()
-        {
-            Success = true,
-            Data = exercise.Id
-        };
-    }
-
-    public async Task<ServiceResult<string>> MakePendency(string contentId, string oldExercise, CancellationToken cancellationToken = default)
-    {
-        var content = await _contentRepository.Get(contentId, cancellationToken);
-
-        if (content is null)
-            return MakeErrorResult<string>("Error while getting content");
-
-        var configurationGetResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
-
-        if (!configurationGetResult.Success)
-            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
-
-        var openAIRequest = MakeOpenAIRequestToPendency(
-            configurationGetResult.Data.Pendency, 
-            content.Body.First(c => c.DisabledDate == DateTime.MinValue).Content,
-            oldExercise
-        );
-
-        var openAIResponse = await _openAIService.DoRequest(openAIRequest);
-
-        if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult<string>("Error to get OpenAI response");
-
-        var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
-        exercise.Id = Guid.NewGuid().ToString();
-        exercise.OwnerId = content.OwnerId;
-        exercise.ConfigurationId = configurationGetResult.Data.Id;
         exercise.ContentId = content.Id;
         exercise.Status = ExerciseStatus.WaitingToDo;
         exercise.Type = ExerciseType.Pendency;
@@ -132,7 +73,7 @@ public class GeneratorService : IGeneratorService
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 
         if (!exerciseSaveResponse)
-            return MakeErrorResult<string>("Error to save exercise");
+            return ServiceResult<string>.MakeErrorResult("Error to save exercise");
 
         content.ExerciseId = exercise.Id;
 
@@ -151,25 +92,52 @@ public class GeneratorService : IGeneratorService
         var contentSaveResponse = await _contentRepository.Update(content.Id, contentRequest, cancellationToken);
 
         if (!contentSaveResponse)
-            return MakeErrorResult<string>("Error to update content");
+            return ServiceResult<string>.MakeErrorResult("Error to update content");
 
-        return new()
-        {
-            Success = true,
-            Data = exercise.Id
-        };
+        return ServiceResult<string>.MakeSuccessResult(exercise.Id);
     }
 
-    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
+    private async Task<ServiceResult<string>> Execute(Content content, InputProperties configuration, string configurationId, CancellationToken cancellationToken = default)
     {
-        Success = false,
-        ErrorMessage = message,
-        Data = default
-    };
+        var openAIResponse = await _openAIService.DoRequest(configuration, content.Body.GetAllActiveContent());
 
-    private static string MakeOpenAIRequestToExercise(InputProperties configuration, string content) =>
-        $"{configuration.InitialInput} {content} {configuration.FinalInput}";
+        if (string.IsNullOrEmpty(openAIResponse.Id))
+            return ServiceResult<string>.MakeErrorResult("Error to get OpenAI response");
 
-    private static string MakeOpenAIRequestToPendency(InputProperties configuration, string content, string oldExercise) =>
-        $"{configuration.InitialInput} {content}. Exercicio anteriormente aplicado: {oldExercise} {configuration.FinalInput}";
+        var exercise = openAIResponse.Choices.First().Message.Content.Deserialize<Exercise>();
+        exercise.Id = Guid.NewGuid().ToString();
+        exercise.OwnerId = content.OwnerId;
+        exercise.ConfigurationId = configurationId;
+        exercise.ContentId = content.Id;
+        exercise.Status = ExerciseStatus.WaitingToDo;
+        exercise.Type = ExerciseType.Default;
+        exercise.TopicIndex = content.SubtopicIndex;
+        exercise.Title = content.Title;
+
+        var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
+
+        if (!exerciseSaveResponse)
+            return ServiceResult<string>.MakeErrorResult("Error to save exercise");
+
+        content.ExerciseId = exercise.Id;
+
+        var contentRequest = new ContentRequest()
+        {
+            OwnerId = content.OwnerId,
+            SummaryId = content.SummaryId,
+            ConfigurationId = content.ConfigurationId,
+            ExerciseId = exercise.Id,
+            Theme = content.Theme,
+            SubtopicIndex = content.SubtopicIndex,
+            Title = content.Title,
+            Body = content.Body
+        };
+
+        var contentSaveResponse = await _contentRepository.Update(content.Id, contentRequest, cancellationToken);
+
+        if (!contentSaveResponse)
+            return ServiceResult<string>.MakeErrorResult("Error to update content");
+
+        return ServiceResult<string>.MakeSuccessResult(exercise.Id);
+    }
 }

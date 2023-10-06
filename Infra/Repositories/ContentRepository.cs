@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Content;
-using Domain.Entities;
+using Domain.Entities.Contents;
 using Domain.Infra;
 using MongoDB.Driver;
 
@@ -44,6 +44,8 @@ public class ContentRepository : IContentRepository
             { 
                 IsUpsert = true 
             };
+
+            content.UpdatedDate = DateTime.UtcNow;
 
             _ = await _dbContext.Content.ReplaceOneAsync(filter, content, options, cancellationToken);
             return content.Id;

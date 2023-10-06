@@ -1,7 +1,8 @@
 ﻿using CrossCutting.Enums;
 using Domain.DTO;
 using Domain.DTO.Exercise;
-using Domain.Entities;
+using Domain.Entities.Configuration;
+using Domain.Entities.Exercise;
 using Domain.Infra;
 using Domain.Services;
 using FluentAssertions;
@@ -16,19 +17,22 @@ namespace IAcademy.Test.Unit.Services
         private readonly Mock<IExerciseRepository> _mockExerciseRepository;
         private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly Mock<IGeneratorService> _mockGeneratorService;
+        private readonly Mock<ICorrectionService> _mockCorrectionService;
 
         private readonly ExerciseService _exerciseService;
 
         public ExerciseServiceTests()
         {
-            _mockExerciseRepository = new Mock<IExerciseRepository>();
-            _mockConfigurationService = new Mock<IConfigurationService>();
-            _mockGeneratorService = new Mock<IGeneratorService>();
+            _mockExerciseRepository = new();
+            _mockConfigurationService = new();
+            _mockGeneratorService = new();
+            _mockCorrectionService = new();
 
             _exerciseService = new ExerciseService(
                 _mockExerciseRepository.Object,
                 _mockConfigurationService.Object,
-                _mockGeneratorService.Object
+                _mockGeneratorService.Object,
+                _mockCorrectionService.Object
             );
         }
 

@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Contents;
 using Domain.Validators;
 using FluentValidation.TestHelper;
 
@@ -7,91 +7,53 @@ namespace IAcademy.Test.Unit.Validators;
 public class BodyValidatorTests
 {
     private readonly BodyValidator _validator;
+    private static readonly List<Subcontent> emptyList = new();
+    private static readonly List<Subcontent> populedList = new()
+    {
+        new Subcontent()
+        {
+            SubcontentHistory = new List<SubcontentHistory>()
+            {
+                new SubcontentHistory()
+                {
+                    Content = "",
+                    CreatedDate = DateTime.Today,
+                    DisabledDate = DateTime.MinValue
+                }
+            }
+        }
+    };
 
     public BodyValidatorTests()
     {
         _validator = new BodyValidator();
     }
 
-    [Theory]
-    [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData("Short", false)]
-    [InlineData("ValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContent", true)]
-    [InlineData("VeryLongContent", false)]
-    public void ValidateContent(string content, bool expected)
+    public static IEnumerable<object[]> ContentValidationData()
     {
-        if (string.Equals(content, "VeryLongContent"))
-            content = content.PadRight(5001, 'a');
-
-        var model = new Body
-        {
-            Content = content,
-            CreatedDate = DateTime.Now
-        };
-
-        var result = _validator.TestValidate(model);
-
-        if (expected)
-        {
-            result.ShouldNotHaveValidationErrorFor(x => x.Content);
-        }
-        else
-        {
-            result.ShouldHaveValidationErrorFor(x => x.Content);
-        }
+        yield return new object[] { null, false };
+        yield return new object[] { emptyList, false };
+        yield return new object[] { populedList, true };
     }
 
     [Theory]
-    [InlineData("2023-09-10", true)]
-    [InlineData("", false)]
-    public void ValidateCreatedDate(string createdDateStr, bool expected)
+    [MemberData(nameof(ContentValidationData))]
+    public void ValidateContents(List<Subcontent> contents, bool expected)
     {
-        DateTime? createdDate = string.IsNullOrEmpty(createdDateStr) ? (DateTime?)null : DateTime.Parse(createdDateStr);
-
-        var model = new Body
+        var model = new Body()
         {
-            Content = "ValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContent",
-            CreatedDate = createdDate ?? default
+            Contents = contents
         };
 
         var result = _validator.TestValidate(model);
 
         if (expected)
         {
-            result.ShouldNotHaveValidationErrorFor(x => x.CreatedDate);
+            result.ShouldNotHaveValidationErrorFor(x => x.Contents);
         }
         else
         {
-            result.ShouldHaveValidationErrorFor(x => x.CreatedDate);
-        }
-    }
-
-    [Theory]
-    [InlineData("2023-09-10", "2023-09-11", false)]
-    [InlineData("2023-09-10", "2023-09-09", true)]
-    [InlineData("2023-09-10", "", true)]
-    public void ValidateDisabledDate(string createdDateStr, string disabledDateStr, bool expected)
-    {
-        DateTime createdDate = DateTime.Parse(createdDateStr);
-        DateTime? disabledDate = string.IsNullOrEmpty(disabledDateStr) ? null : DateTime.Parse(disabledDateStr);
-
-        var model = new Body
-        {
-            Content = "ValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContentValidContent",
-            CreatedDate = createdDate,
-            DisabledDate = disabledDate ?? default
-        };
-
-        var result = _validator.TestValidate(model);
-
-        if (expected)
-        {
-            result.ShouldNotHaveValidationErrorFor(x => x.DisabledDate);
-        }
-        else
-        {
-            result.ShouldHaveValidationErrorFor(x => x.DisabledDate);
+            result.ShouldHaveValidationErrorFor(x => x.Contents);
         }
     }
 }

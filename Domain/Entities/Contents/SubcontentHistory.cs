@@ -1,6 +1,6 @@
-﻿namespace Domain.Entities;
+﻿namespace Domain.Entities.Contents;
 
-public class Body
+public class SubcontentHistory
 {
     public string Content { get; set; }
     public DateTime CreatedDate { get; set; }

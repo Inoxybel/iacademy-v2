@@ -1,8 +1,7 @@
 ﻿using CrossCutting.Enums;
-using CrossCutting.Extensions;
 using Domain.DTO;
 using Domain.DTO.Exercise;
-using Domain.Entities;
+using Domain.Entities.Exercise;
 using Domain.Infra;
 using Domain.Services;
 
@@ -13,15 +12,18 @@ public class ExerciseService : IExerciseService
     private readonly IExerciseRepository _repository;
     private readonly IConfigurationService _configurationService;
     private readonly IGeneratorService _exerciseGenerator;
+    private readonly ICorrectionService _correctionService;
 
     public ExerciseService(
         IExerciseRepository repository,
         IConfigurationService configurationService,
-        IGeneratorService exerciseGenerator)
+        IGeneratorService exerciseGenerator,
+        ICorrectionService correctionService)
     {
         _repository = repository;
         _configurationService = configurationService;
         _exerciseGenerator = exerciseGenerator;
+        _correctionService = correctionService;
     }
 
     public async Task<ServiceResult<Exercise>> Get(string exerciseId, CancellationToken cancellationToken = default)
@@ -29,13 +31,9 @@ public class ExerciseService : IExerciseService
         var exercise = await _repository.Get(exerciseId, cancellationToken);
 
         if (exercise is null)
-            return MakeErrorResult<Exercise>("Exercise not found.");
+            return ServiceResult<Exercise>.MakeErrorResult("Exercise not found.");
 
-        return new()
-        {
-            Data = exercise,
-            Success = true
-        };
+        return ServiceResult<Exercise>.MakeSuccessResult(exercise);
     }
 
     public async Task<ServiceResult<List<Exercise>>> GetAllByIds(IEnumerable<string> exerciseIds, CancellationToken cancellationToken = default)
@@ -43,50 +41,18 @@ public class ExerciseService : IExerciseService
         var exercises = await _repository.GetAllByIds(exerciseIds, cancellationToken);
 
         if (!exercises.Any())
-            return MakeErrorResult<List<Exercise>>("Exercises not found.");
+            return ServiceResult<List<Exercise>>.MakeErrorResult("Exercises not found.");
 
-        return new()
-        {
-            Data = exercises,
-            Success = true
-        };
+        return ServiceResult<List<Exercise>>.MakeSuccessResult(exercises);
     }
 
     public async Task<ServiceResult<List<Exercise>>> GetAllByOwnerIdAndType(string ownerId, ExerciseType type, CancellationToken cancellationToken = default)
     {
         var exercises = await _repository.GetAllByOwnerIdAndType(ownerId, type, cancellationToken);
         if (!exercises.Any())
-            return MakeErrorResult<List<Exercise>>("No exercises found.");
+            return ServiceResult<List<Exercise>>.MakeErrorResult("No exercises found.");
 
-        return new()
-        {
-            Data = exercises,
-            Success = true
-        };
-    }
-
-    public async Task<ServiceResult<string>> MakePendency(string exerciseId, CancellationToken cancellationToken = default)
-    {
-        var oldExercise = await _repository.Get(exerciseId, cancellationToken);
-
-        if (oldExercise is null)
-            return MakeErrorResult<string>("Error to get old exercise");
-
-        var configurationGetResult = await _configurationService.Get(oldExercise.ConfigurationId, cancellationToken);
-
-        if (!configurationGetResult.Success)
-            return MakeErrorResult<string>(configurationGetResult.ErrorMessage);
-
-        var makePendencyResult = await _exerciseGenerator.MakePendency(oldExercise.ContentId, oldExercise.Exercises.Serialize(), cancellationToken);
-
-        if (!makePendencyResult.Success)
-            return MakeErrorResult<string>(makePendencyResult.ErrorMessage);
-
-        return new()
-        {
-            Success = true,
-            Data = makePendencyResult.Data
-        };
+        return ServiceResult<List<Exercise>>.MakeSuccessResult(exercises);
     }
 
     public async Task<ServiceResult<string>> MakeExercise(string contentId, CancellationToken cancellationToken = default)
@@ -94,7 +60,7 @@ public class ExerciseService : IExerciseService
         var makeExerciseResult = await _exerciseGenerator.MakeExercise(contentId, cancellationToken);
 
         if (!makeExerciseResult.Success)
-            return MakeErrorResult<string>(makeExerciseResult.ErrorMessage);
+            return ServiceResult<string>.MakeErrorResult(makeExerciseResult.ErrorMessage);
 
         return new()
         {
@@ -112,6 +78,7 @@ public class ExerciseService : IExerciseService
             Id = id,
             OwnerId = request.OwnerId,
             ConfigurationId = request.ConfigurationId,
+            SummaryId = request.SummaryId,
             Status = request.Status,
             Type = request.Type,
             TopicIndex = request.TopicIndex,
@@ -121,11 +88,7 @@ public class ExerciseService : IExerciseService
 
         var success = await _repository.Save(exercise, cancellationToken);
 
-        return new()
-        {
-            Data = id,
-            Success = success
-        };
+        return success ? ServiceResult<string>.MakeSuccessResult(id) : ServiceResult<string>.MakeErrorResult("");
     }
 
     public async Task<ServiceResult<List<string>>> SaveAll(IEnumerable<Exercise> exercises, CancellationToken cancellationToken = default)
@@ -133,13 +96,9 @@ public class ExerciseService : IExerciseService
         var repositoryResult = await _repository.SaveAll(exercises, cancellationToken);
 
         if (!repositoryResult.Any())
-            return MakeErrorResult<List<string>>("Error while save exercises");
+            return ServiceResult<List<string>>.MakeErrorResult("Error while save exercises");
 
-        return new()
-        {
-            Data = repositoryResult,
-            Success = true
-        };
+        return ServiceResult<List<string>>.MakeSuccessResult(repositoryResult);
     }
 
     public async Task<ServiceResult<bool>> Update(string exerciseId, ExerciseRequest request, CancellationToken cancellationToken = default)
@@ -147,21 +106,10 @@ public class ExerciseService : IExerciseService
         var exercise = await _repository.Get(exerciseId, cancellationToken);
 
         if (exercise == null)
-            return MakeErrorResult<bool>("Exercise not found.");
+            return ServiceResult<bool>.MakeErrorResult("Exercise not found.");
 
         var success = await _repository.Update(exerciseId, exercise, cancellationToken);
 
-        return new()
-        {
-            Data = success,
-            Success = success
-        };
+        return success ? ServiceResult<bool>.MakeSuccessResult(success) : ServiceResult<bool>.MakeErrorResult("");
     }
-
-    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
-    {
-        Success = false,
-        ErrorMessage = message,
-        Data = default
-    };
 }

@@ -2,7 +2,10 @@
 using Domain.DTO;
 using Domain.DTO.Content;
 using Domain.DTO.Summary;
-using Domain.Entities;
+using Domain.Entities.Configuration;
+using Domain.Entities.Contents;
+using Domain.Entities.Exercise;
+using Domain.Entities.Summary;
 using Domain.Infra;
 using Domain.Services;
 using Service.Integrations.OpenAI.DTO;
@@ -19,6 +22,7 @@ public class ContentService : IContentService
     private readonly ISummaryService _summaryService;
     private readonly IExerciseService _exerciseService;
     private readonly IChatCompletionsService _chatCompletionsService;
+    private readonly ICompanyService _companyService;
 
     public ContentService(
         IContentRepository contentRepository,
@@ -27,7 +31,8 @@ public class ContentService : IContentService
         IOpenAIService openAIService,
         IConfigurationService configurationService,
         IExerciseService exerciseService,
-        IChatCompletionsService chatCompletionsService)
+        IChatCompletionsService chatCompletionsService,
+        ICompanyService companyService)
     {
         _contentRepository = contentRepository;
         _summaryService = summaryService;
@@ -36,6 +41,7 @@ public class ContentService : IContentService
         _configurationService = configurationService;
         _exerciseService = exerciseService;
         _chatCompletionsService = chatCompletionsService;
+        _companyService = companyService;
     }
 
     public async Task<ServiceResult<Content>> Get(string id, CancellationToken cancellationToken = default)
@@ -43,13 +49,9 @@ public class ContentService : IContentService
         var content = await _contentRepository.Get(id, cancellationToken);
 
         if (content == null)
-            return MakeErrorResult<Content>("Content not found.");
+            return ServiceResult<Content>.MakeErrorResult("Content not found.");
 
-        return new()
-        {
-            Success = true,
-            Data = content
-        };
+        return ServiceResult<Content>.MakeSuccessResult(content);
     }
 
     public async Task<ServiceResult<List<Content>>> GetAllBySummaryId(string summaryId, CancellationToken cancellationToken = default)
@@ -57,13 +59,9 @@ public class ContentService : IContentService
         var contents = await _contentRepository.GetAllBySummaryId(summaryId, cancellationToken);
 
         if (contents == null || !contents.Any())
-            return MakeErrorResult<List<Content>>("No contents found.");
+            return ServiceResult<List<Content>>.MakeErrorResult("No contents found.");
 
-        return new()
-        {
-            Success = true,
-            Data = contents
-        };
+        return ServiceResult<List<Content>>.MakeSuccessResult(contents);
     }
 
     public async Task<ServiceResult<string>> Save(ContentRequest request, CancellationToken cancellationToken = default)
@@ -85,19 +83,15 @@ public class ContentService : IContentService
         var repositoryResponse = await _contentRepository.Save(content, cancellationToken);
 
         if (string.IsNullOrEmpty(repositoryResponse))
-            return MakeErrorResult<string>("Failed to save content.");
+            return ServiceResult<string>.MakeErrorResult("Failed to save content.");
 
-        return new()
-        {
-            Success = true,
-            Data = repositoryResponse
-        };
+        return ServiceResult<string>.MakeSuccessResult(repositoryResponse);
     }
 
     public async Task<ServiceResult<List<string>>> SaveAll(List<ContentRequest> contents, CancellationToken cancellationToken = default)
     {
         if (!contents.Any())
-            return MakeErrorResult<List<string>>("No contents sended");
+            return ServiceResult<List<string>>.MakeErrorResult("No contents sended");
 
         var contentsToSave = new List<Content>();
 
@@ -111,13 +105,9 @@ public class ContentService : IContentService
         var repositoryResponse = await _contentRepository.SaveAll(contentsToSave, cancellationToken);
 
         if (!repositoryResponse.Any())
-            return MakeErrorResult<List<string>>("Failed to save all contents.");
+            return ServiceResult<List<string>>.MakeErrorResult("Failed to save all contents.");
 
-        return new()
-        {
-            Success = true,
-            Data = repositoryResponse
-        };
+        return ServiceResult<List<string>>.MakeSuccessResult(repositoryResponse);
     }
 
 
@@ -127,13 +117,9 @@ public class ContentService : IContentService
         var isSuccess = await _contentRepository.Update(contentId, request, cancellationToken);
 
         if (!isSuccess)
-            return MakeErrorResult<bool>("Failed to update content.");
+            return ServiceResult<bool>.MakeErrorResult("Failed to update content.");
 
-        return new()
-        {
-            Success = true,
-            Data = true
-        };
+        return ServiceResult<bool>.MakeSuccessResult(true);
     }
 
     public async Task<ServiceResult<bool>> UpdateAll(string summaryId, List<Content> contents, CancellationToken cancellationToken = default)
@@ -141,13 +127,9 @@ public class ContentService : IContentService
         var isSuccess = await _contentRepository.UpdateAll(summaryId, contents, cancellationToken);
 
         if (!isSuccess)
-            return MakeErrorResult<bool>($"Failed to update contents for summary ID {summaryId}.");
+            return ServiceResult<bool>.MakeErrorResult($"Failed to update contents for summary ID {summaryId}.");
 
-        return new()
-        {
-            Success = true,
-            Data = true
-        };
+        return ServiceResult<bool>.MakeSuccessResult(true);
     }
 
     public async Task<ServiceResult<string>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default)
@@ -157,21 +139,21 @@ public class ContentService : IContentService
         var getSummaryResult = await _summaryService.Get(summaryId, cancellationToken);
 
         if (!getSummaryResult.Success)
-            return MakeErrorResult<string>("Error to find summary");
+            return ServiceResult<string>.MakeErrorResult("Error to find summary");
 
         var summary = getSummaryResult.Data;
 
         var getConfigurationResult = await _configurationService.Get(summary.ConfigurationId, cancellationToken);
 
         if (!getConfigurationResult.Success)
-            return MakeErrorResult<string>("Error to find configuration");
+            return ServiceResult<string>.MakeErrorResult("Error to find configuration");
 
         var configuration = getConfigurationResult.Data;
 
         var subtopic = summary.Topics.SelectMany(t => t.Subtopics).FirstOrDefault(s => s.Index == request.SubtopicIndex);
 
         if (subtopic is null)
-            return MakeErrorResult<string>("Error to find index on topic");
+            return ServiceResult<string>.MakeErrorResult("Error to find index on topic");
 
         var chatCompletions = await _chatCompletionsService.Get(summary.ChatId, cancellationToken);
 
@@ -179,46 +161,63 @@ public class ContentService : IContentService
 
         if (chatCompletions.Success)
         {
-            var requestString = MakeOpenAIFirstContentRequest(configuration.FirstContent, request.SubtopicIndex);
+            openAIResponse = await _openAIService.DoRequest(chatCompletions.Data, configuration.FirstContent, subtopic.Index);
 
-            openAIResponse = await _openAIService.DoRequest(chatCompletions.Data, requestString);                
+            if (!string.IsNullOrEmpty(openAIResponse.Id))
+            {
+                chatCompletions.Data.Choices.Add(new()
+                {
+                    Index = 2,
+                    Message = new()
+                    {
+                        Role = "assistant",
+                        Content = openAIResponse.Choices.First().Message.Content
+                    }
+
+                });
+            }
         }
         else
         {            
-            var requestString = MakeOpenAIRequest(configuration.FirstContent, summary.Theme, subtopic.Title);
+            var requestString = MakeOpenAIRequest(summary.Theme, subtopic.Title);
 
-            openAIResponse = await _openAIService.DoRequest(requestString);
+            openAIResponse = await _openAIService.DoRequest(configuration.FirstContent, requestString);
         }
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult<string>("Error to get OpenAI content create response");
+            return ServiceResult<string>.MakeErrorResult("Error to get OpenAI content create response");
 
         var summaryContent = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>();
 
         if (summaryContent.Subtopic is null)
             summaryContent = openAIResponse.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>(true);
 
-        newContent = MakeNewContent(summary, summaryContent.Subtopic);
+        newContent = MakeNewContent(summary, summaryContent.Subtopic, request.SubtopicIndex);
+
+        var saveChatResult = await _chatCompletionsService.Save(openAIResponse, cancellationToken);
+
+        if (saveChatResult.Success)
+            newContent.ChatId = saveChatResult.Data;
 
         var saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
         if (string.IsNullOrEmpty(saveContentResult))
-            return MakeErrorResult<string>("Error to save content");
+            return ServiceResult<string>.MakeErrorResult("Error to save content");
 
-        var makeExerciseResult = await _exerciseGeneratorService.MakeExercise(newContent, configuration, cancellationToken);
+        var makeExerciseResult = await _exerciseGeneratorService.MakeExercise(newContent, configuration.Exercise, configuration.Id, cancellationToken);
 
         if (!makeExerciseResult.Success)
-            return MakeErrorResult<string>("Error to make exercise");
+            return ServiceResult<string>.MakeErrorResult("Error to make exercise");
 
         newContent.ExerciseId = makeExerciseResult.Data;
 
         saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
 
         if (string.IsNullOrEmpty(saveContentResult))
-            return MakeErrorResult<string>("Error to update content");
+            return ServiceResult<string>.MakeErrorResult("Error to update content");
 
         subtopic.ContentId = newContent.Id;
-        subtopic.ExerciseId = newContent.ExerciseId;
+        subtopic.ExerciseId = makeExerciseResult.Data;
 
         var summaryUpdateRequest = new SummaryRequest()
         {
@@ -235,78 +234,107 @@ public class ContentService : IContentService
         var updateSummaryResult = await _summaryService.Update(summaryId, summaryUpdateRequest, cancellationToken);
 
         if (!updateSummaryResult.Success)
-            return MakeErrorResult<string>("Error to update summary");
+            return ServiceResult<string>.MakeErrorResult("Error to update summary");
 
-        return new()
-        {
-            Success = true,
-            Data = newContent.Id
-        };
+        return ServiceResult<string>.MakeSuccessResult(newContent.Id);
     }
 
-    public async Task<ServiceResult<string>> MakeAlternativeContent(string contentId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> MakeAlternativeContent(string contentId, SubcontentRecreationRequest request, CancellationToken cancellationToken = default)
     {
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
-            return MakeErrorResult<string>("Content not found");
+            return ServiceResult<string>.MakeErrorResult("Content not found");
 
         var getConfigurationResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
         if (!getConfigurationResult.Success)
-            return MakeErrorResult<string>("Error to find configuration");
+            return ServiceResult<string>.MakeErrorResult("Error to find configuration");
 
         var configuration = getConfigurationResult.Data;
 
-        var resultGetLastContent = content.Body.First(c => c.DisabledDate == DateTime.MinValue)?.Content;
-        var lastContent = resultGetLastContent ?? string.Empty;
+        var contents = content.Body.Contents;
 
-        if (string.IsNullOrEmpty(lastContent))
-            return MakeErrorResult<string>("Error to get active content");
+        if (ValidateIndexOutOfRange(request.SubcontentIndex, contents.Count))
+            return ServiceResult<string>.MakeErrorResult("Invalid index");
 
-        var requestString = MakeOpenAIRequest(configuration.NewContent, lastContent);
+        var openAIResponse = new OpenAIResponse();
 
-        var openAIResponse = await _openAIService.DoRequest(requestString);
+        if (string.IsNullOrEmpty(content.ChatId))
+        {
+            openAIResponse = await CommonRequestOpenAPI(contents, request, configuration);
+        }
+        else
+        {
+            var chatCompletionResponse = await _chatCompletionsService.Get(content.ChatId, cancellationToken);
+
+            if(chatCompletionResponse.Success)
+            {
+
+                openAIResponse = await _openAIService.DoRequest(chatCompletionResponse.Data, configuration.NewContent, string.Empty);
+            }
+            else
+            {
+                openAIResponse = await CommonRequestOpenAPI(contents, request, configuration);
+            }
+        } 
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
-            return MakeErrorResult<string>("Error to get OpenAI response");
+            return ServiceResult<string>.MakeErrorResult("Error to get OpenAI response");
 
-        var newContent = openAIResponse.Choices.First().Message.Content.Deserialize<Content>();
+        var recreatedContent = openAIResponse.Choices.First().Message.Content.Deserialize<AISubcontentRecreatedResponse>();
 
-        if (!newContent.Body.Any())
-            newContent = openAIResponse.Choices.First().Message.Content.Deserialize<Content>(true);
+        if (string.IsNullOrEmpty(recreatedContent.NewContent))
+            recreatedContent = openAIResponse.Choices.First().Message.Content.Deserialize<AISubcontentRecreatedResponse>(true);
 
-        var newBody = MakeNewContentList(content.Body, newContent.Body);
+        if (recreatedContent is null || string.IsNullOrEmpty(recreatedContent.NewContent))
+            return ServiceResult<string>.MakeErrorResult("Error to deserialize generated content.");
 
-        content.Body = newBody;
+        var newContentList = MakeNewContentList(content.Body.Contents, request.SubcontentIndex, recreatedContent.NewContent);
+
+        content.Body.Contents = newContentList;
 
         var saveContentResult = await _contentRepository.Save(content, cancellationToken);
 
         if (string.IsNullOrEmpty(saveContentResult))
-            return MakeErrorResult<string>("Error to update content");
+            return ServiceResult<string>.MakeErrorResult("Error to update content");
 
-        return new()
-        {
-            Success = true,
-            Data = contentId
-        };
+        return ServiceResult<string>.MakeSuccessResult(contentId);
     }
 
-    public async Task<ServiceResult<string>> CopyContentsToEnrollUser(SummaryMatriculationRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> CopyContentsToEnrollUser(SummaryMatriculationRequest request, string ownerId, string companyRef, string document, CancellationToken cancellationToken = default)
     {
         var summaryServiceResponse = await _summaryService.Get(request.SummaryId, cancellationToken);
 
         if (!summaryServiceResponse.Success)
-            return MakeErrorResult<string>("Summary not found.");
+            return ServiceResult<string>.MakeErrorResult("Summary not found.");
 
         var summary = summaryServiceResponse.Data;
 
-        if (!summary.OwnerId.Equals("iacademy"))
-            return MakeErrorResult<string>("This summary is not master.");
+        var company = await _companyService.GetByRef(companyRef, cancellationToken);
+
+        if (company is null)
+            return ServiceResult<string>.MakeErrorResult("Company not found.");
+
+        var groups = company.GetGroupByUserDocument(document);
+
+        if (groups is null || !groups.Any())
+            return ServiceResult<string>.MakeErrorResult("Contact your company.");
+
+        if (!groups.Any(g => g.AuthorizedTrainingIds.Contains(request.SummaryId)))
+            return ServiceResult<string>.MakeErrorResult("This training is not enabled for your company.");
+
+        if (!summary.OwnerId.Equals(company.Cnpj))
+            return ServiceResult<string>.MakeErrorResult("This summary is not master.");
+
+        var isEnrolled = await _summaryService.IsEnrolled(request.SummaryId, ownerId, cancellationToken);
+
+        if (isEnrolled)
+            return ServiceResult<string>.MakeErrorResult("Is already enrolled.");
 
         summary.Id = Guid.NewGuid().ToString();
         summary.OriginId = request.SummaryId;
-        summary.OwnerId = request.OwnerId;
+        summary.OwnerId = ownerId;
 
         var contentIds = summary.Topics
             .SelectMany(topic => topic.Subtopics)
@@ -315,12 +343,12 @@ public class ContentService : IContentService
             .ToList();
 
         if (!contentIds.Any())
-            return MakeErrorResult<string>("Error to get content ids.");
+            return ServiceResult<string>.MakeErrorResult("Error to get content ids.");
 
         var baseContents = await _contentRepository.GetAllByIds(contentIds, cancellationToken);
 
         if (!baseContents.Any())
-            return MakeErrorResult<string>("Error to get contents.");
+            return ServiceResult<string>.MakeErrorResult("Error to get contents.");
 
         var exerciseIds = baseContents
             .Where(content => !string.IsNullOrEmpty(content.ExerciseId))
@@ -328,58 +356,82 @@ public class ContentService : IContentService
             .ToList();
 
         if (!exerciseIds.Any())
-            return MakeErrorResult<string>("Error to get exercise ids.");
+            return ServiceResult<string>.MakeErrorResult("Error to get exercise ids.");
 
         var baseExercises = await _exerciseService.GetAllByIds(exerciseIds, cancellationToken);
 
         if(!baseExercises.Success)
-            return MakeErrorResult<string>("Error to get exercises.");
+            return ServiceResult<string>.MakeErrorResult("Error to get exercises.");
 
         summary = await CreateNewReferences(baseContents, baseExercises.Data, summary);
 
         var newContentsSaveResult = await _contentRepository.SaveAll(baseContents, cancellationToken);
 
         if(!newContentsSaveResult.Any())
-            return MakeErrorResult<string>("Error to save new contents.");
+            return ServiceResult<string>.MakeErrorResult("Error to save new contents.");
 
         var newExercisesSaveResult = await _exerciseService.SaveAll(baseExercises.Data, cancellationToken);
 
         if (!newExercisesSaveResult.Success)
-            return MakeErrorResult<string>("Error to save new exercises.");
+            return ServiceResult<string>.MakeErrorResult("Error to save new exercises.");
 
         var summarySaveRequest = MakeSummaryRequest(summary);
 
         var summaryRepositoryResponse = await _summaryService.Save(summarySaveRequest, summary.Id, cancellationToken);
 
         if(!summaryRepositoryResponse.Success)
-            return MakeErrorResult<string>("Fail to enroll user, try again.");
+            return ServiceResult<string>.MakeErrorResult("Fail to enroll user, try again.");
 
-        return new ServiceResult<string>()
-        {
-            Success = summaryRepositoryResponse.Success,
-            Data = summaryRepositoryResponse.Data
-        };
+        return ServiceResult<string>.MakeSuccessResult(summaryRepositoryResponse.Data);
     }
 
-    private static Content MakeNewContent(Summary summary, SummarySubtopicDTO subtopic) => new()
+    private async Task<OpenAIResponse> CommonRequestOpenAPI(List<Subcontent> contents, SubcontentRecreationRequest request, Configuration configuration)
     {
-        Id = Guid.NewGuid().ToString(),
-        OwnerId = summary.OwnerId,
-        ConfigurationId = summary.ConfigurationId,
-        SummaryId = summary.Id,
-        Theme = summary.Theme,
-        SubtopicIndex = subtopic.Index,
-        Title = subtopic.Title,
-        CreatedDate = DateTime.UtcNow,
-        Body = new List<Body>()
+        var partToRegenerate = GetSubcontentHistory(contents, request);
+
+        if (partToRegenerate?.Content is null)
+            return new();
+
+        return await _openAIService.DoRequest(configuration.NewContent, partToRegenerate.Content);
+    }
+
+    private static SubcontentHistory GetSubcontentHistory(List<Subcontent> contents, SubcontentRecreationRequest request) =>
+        contents[request.SubcontentIndex].SubcontentHistory.FirstOrDefault(h => h.DisabledDate == DateTime.MinValue)!;
+
+    private static bool ValidateIndexOutOfRange(int index, int limit) =>
+     index < 0 || index >= limit;
+
+    private static Content MakeNewContent(Summary summary, SummarySubtopicDTO subtopic, string subtopicIndex)
+    {
+        return new()
         {
-            new Body()
+            Id = Guid.NewGuid().ToString(),
+            OwnerId = summary.OwnerId,
+            ConfigurationId = summary.ConfigurationId,
+            SummaryId = summary.Id,
+            Theme = summary.Theme,
+            SubtopicIndex = subtopicIndex,
+            Title = subtopic.Title,
+            CreatedDate = DateTime.UtcNow,
+            Body = new Body()
             {
-                Content = subtopic.Content,
-                CreatedDate = DateTime.UtcNow
+                Contents = subtopic.Content.Select(c =>
+                    new Subcontent()
+                    {
+                        SubcontentHistory = new List<SubcontentHistory>()
+                        {
+                            new SubcontentHistory()
+                            {
+                                Content = c,
+                                CreatedDate = DateTime.UtcNow,
+                                DisabledDate = DateTime.MinValue
+                            }
+                        }
+                    }
+                ).ToList()
             }
-        }
-    };
+        };
+    }
 
     private static Content MakeNewContentFromContentRequest(ContentRequest content) => new()
     {
@@ -404,7 +456,9 @@ public class ContentService : IContentService
         Category = summary.Category,
         Subcategory = summary.Subcategory,
         Theme = summary.Theme,
-        Topics = summary.Topics
+        Topics = summary.Topics,
+        Icon = summary.Icon,
+        ChatId = summary.ChatId
     };
 
     private static async Task<Summary> CreateNewReferences(List<Content> baseContents, List<Exercise> baseExercises, Summary summary)
@@ -452,43 +506,40 @@ public class ContentService : IContentService
             topic.Subtopics.ForEach(subtopic =>
             {
                 if (subtopic.ContentId is not null && contentIdMap.ContainsKey(subtopic.ContentId))
-                {
                     subtopic.ContentId = contentIdMap[subtopic.ContentId];
-                }
+
+                if (subtopic.ExerciseId is not null && exerciseIdMap.ContainsKey(subtopic.ExerciseId))
+                    subtopic.ExerciseId = exerciseIdMap[subtopic.ExerciseId];
             });
         });
 
         return summary;
     }
 
-    private static ServiceResult<T> MakeErrorResult<T>(string message) => new()
+    private static List<Subcontent> MakeNewContentList(List<Subcontent> contents, int subtopicIndex, string newContent)
     {
-        Success = false,
-        ErrorMessage = message,
-        Data = default
-    };
-
-    private static List<Body> MakeNewContentList(List<Body> contents, List<Body> newContent)
-    {
-        var contentToDesactive = contents.Find(b => b.DisabledDate == DateTime.MinValue);
+        var contentToDesactive = contents[subtopicIndex].SubcontentHistory.Find(b => b.DisabledDate == DateTime.MinValue);
 
         contentToDesactive.DisabledDate = DateTime.UtcNow;
 
-        contents.Remove(contentToDesactive);
+        contents[subtopicIndex].SubcontentHistory.Remove(contentToDesactive);
 
-        var newContentList = new List<Body>
+        var newContentList = new List<SubcontentHistory>
+        {
+            new()
             {
-                contentToDesactive,
-                new Body()
-                {
-                    Content = newContent.First().Content,
-                    CreatedDate = DateTime.UtcNow
-                }
-            };
+                Content = newContent,
+                CreatedDate = DateTime.UtcNow,
+                DisabledDate = DateTime.MinValue
+            },
+            contentToDesactive
+        };
 
-        newContentList.AddRange(contents.FindAll(b => b.DisabledDate != DateTime.MinValue));
+        newContentList.AddRange(contents[subtopicIndex].SubcontentHistory.FindAll(b => b.DisabledDate != DateTime.MinValue));
 
-        return newContentList;
+        contents[subtopicIndex].SubcontentHistory = newContentList;
+
+        return contents;
     }
 
     private static string MakeOpenAIFirstContentRequest(InputProperties configuration, string topicIndex)
@@ -498,16 +549,9 @@ public class ContentService : IContentService
         return request;
     }
 
-    private static string MakeOpenAIRequest(InputProperties configuration, string theme, string title)
+    private static string MakeOpenAIRequest(string theme, string title)
     {
-        var request = $"{configuration.InitialInput}: {theme} - {title} {configuration.FinalInput}";
-
-        return request;
-    }
-
-    private static string MakeOpenAIRequest(InputProperties configuration, string content)
-    {
-        var request = $"{configuration.InitialInput}: {content} {configuration.FinalInput}";
+        var request = $"{theme} - {title}";
 
         return request;
     }

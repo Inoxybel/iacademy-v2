@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Contents;
 
 namespace IAcademy.Test.Shared.Builders;
 
@@ -18,10 +18,7 @@ public class ContentBuilder
         Theme = "DefaultTheme",
         SubtopicIndex = "1",
         Title = "DefaultTitle",
-        Body = new List<Body>()
-        {
-            new BodyBuilder().Build()
-        },
+        Body = new BodyBuilder().Build(),
         CreatedDate = DateTime.UtcNow,
         UpdatedDate = DateTime.UtcNow
     };
@@ -74,7 +71,7 @@ public class ContentBuilder
         return this;
     }
 
-    public ContentBuilder WithBody(List<Body> body)
+    public ContentBuilder WithBody(Body body)
     {
         content.Body = body;
         return this;

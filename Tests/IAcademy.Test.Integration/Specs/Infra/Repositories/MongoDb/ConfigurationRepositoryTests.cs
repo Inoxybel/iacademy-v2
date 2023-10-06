@@ -6,7 +6,7 @@ using IAcademy.Test.Integration.Configuration;
 using IAcademy.Test.Shared.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using ConfigurationEntity = Domain.Entities.Configuration;
+using ConfigurationEntity = Domain.Entities.Configuration.Configuration;
 
 namespace IAcademy.Test.Integration.Specs.Infra.Repositories.MongoDb;
 

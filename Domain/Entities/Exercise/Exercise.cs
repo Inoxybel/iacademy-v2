@@ -1,6 +1,6 @@
 ﻿using CrossCutting.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Entities.Exercise;
 
 public class Exercise
 {
@@ -9,6 +9,7 @@ public class Exercise
     public string ContentId { get; set; }
     public string CorrectionId { get; set; }
     public string ConfigurationId { get; set; }
+    public string SummaryId { get; set; }
     public ExerciseStatus Status { get; set; }
     public ExerciseType Type { get; set; }
     public DateTime SendedAt { get; set; }

@@ -1,5 +1,4 @@
 ﻿using Domain.DTO.Correction;
-using Domain.Entities;
 using Domain.Infra;
 using Moq;
 using Service.Integrations.OpenAI.Interfaces;
@@ -8,6 +7,10 @@ using FluentAssertions;
 using Service.Integrations.OpenAI.DTO;
 using IAcademy.Test.Shared.Builders;
 using CrossCutting.Enums;
+using Domain.Entities.Exercise;
+using Domain.Entities.Feedback;
+using Domain.Entities.Configuration;
+using Domain.Services;
 
 namespace IAcademy.Test.Unit.Services;
 
@@ -16,6 +19,7 @@ public class CorrectionServiceTests
     private readonly Mock<ICorrectionRepository> _mockCorrectionRepository;
     private readonly Mock<IExerciseRepository> _mockExerciseRepository;
     private readonly Mock<IConfigurationRepository> _mockConfigurationRepository;
+    private readonly Mock<ISummaryService> _mockSummaryService;
     private readonly Mock<IOpenAIService> _mockOpenAIService;
     private readonly CorrectionService correctionService;
 
@@ -24,12 +28,14 @@ public class CorrectionServiceTests
         _mockCorrectionRepository = new();
         _mockExerciseRepository = new();
         _mockConfigurationRepository = new();
+        _mockSummaryService = new();
         _mockOpenAIService = new();
 
         correctionService = new(
             _mockCorrectionRepository.Object,
             _mockExerciseRepository.Object,
             _mockConfigurationRepository.Object,
+            _mockSummaryService.Object,
             _mockOpenAIService.Object
         );
     }
@@ -37,7 +43,7 @@ public class CorrectionServiceTests
     [Fact]
     public async Task Get_SHOULD_ReturnFailResponse_WHEN_CorrectionNotFound()
     {
-        var result = await correctionService.Get("someId");
+        var result = await correctionService.Get("someId", "ownerId");
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Correction not found.");
@@ -51,7 +57,7 @@ public class CorrectionServiceTests
         _mockCorrectionRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedCorrection);
 
-        var result = await correctionService.Get("someId");
+        var result = await correctionService.Get("someId", "ownerId");
 
         result.Success.Should().BeTrue();
         result.Data.Should().Be(expectedCorrection);
@@ -90,7 +96,7 @@ public class CorrectionServiceTests
     { 
         var request = new CreateCorrectionRequest();
 
-        var result = await correctionService.MakeCorrection("exerciseId", request);
+        var result = await correctionService.MakeCorrection("exerciseId", "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to get exercise.");
@@ -99,7 +105,9 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToUpdateExercise()
     {
-        var exercise = new ExerciseBuilder().Build();
+        var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
+            .Build();
 
         _mockExerciseRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(exercise);
@@ -115,7 +123,7 @@ public class CorrectionServiceTests
             }
         };
 
-        var result = await correctionService.MakeCorrection("exerciseId", request);
+        var result = await correctionService.MakeCorrection("exerciseId", "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to update exercise.");
@@ -125,6 +133,7 @@ public class CorrectionServiceTests
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_ExerciseStatus_Is_Not_Equal_WaitingToDo()
     {
         var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
             .WithStatus(ExerciseStatus.WaitingCorrection)
             .Build();
 
@@ -133,7 +142,7 @@ public class CorrectionServiceTests
 
         var request = new CreateCorrectionRequest();
 
-        var result = await correctionService.MakeCorrection(exercise.Id, request);
+        var result = await correctionService.MakeCorrection(exercise.Id, "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("There is already a correction process for this exercise.");
@@ -142,7 +151,9 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToGetConfigurations()
     {
-        var exercise = new ExerciseBuilder().Build();
+        var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
+            .Build();
 
         _mockExerciseRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(exercise);
@@ -158,7 +169,7 @@ public class CorrectionServiceTests
             }
         };
 
-        var result = await correctionService.MakeCorrection(exercise.Id, request);
+        var result = await correctionService.MakeCorrection(exercise.Id, "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to get configurations.");
@@ -167,7 +178,10 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToDeserializeIAResponse()
     {
-        var exercise = new ExerciseBuilder().Build();
+        var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
+            .Build();
+
         var configuration = new ConfigurationBuilder().Build();
 
         _mockExerciseRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -179,7 +193,7 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
             .ReturnsAsync(new OpenAIResponse 
             { 
                 Id = string.Empty 
@@ -187,7 +201,7 @@ public class CorrectionServiceTests
 
         var request = new CreateCorrectionRequestBuilder().Build();
 
-        var result = await correctionService.MakeCorrection(exercise.Id, request);
+        var result = await correctionService.MakeCorrection(exercise.Id, "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to deserialize IA response");
@@ -196,7 +210,10 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToSaveCorrection()
     {
-        var exercise = new ExerciseBuilder().Build();
+        var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
+            .Build();
+
         var configuration = new ConfigurationBuilder().Build();
         var openAIResponse = new OpenAIResponseBuilder()
             .WithChoices(new()
@@ -225,7 +242,7 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockCorrectionRepository.Setup(x => x.Save(It.IsAny<Correction>(), It.IsAny<CancellationToken>()))
@@ -233,7 +250,7 @@ public class CorrectionServiceTests
 
         var request = new CreateCorrectionRequestBuilder().Build();
 
-        var result = await correctionService.MakeCorrection(exercise.Id, request);
+        var result = await correctionService.MakeCorrection(exercise.Id, "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to save correction");
@@ -242,7 +259,10 @@ public class CorrectionServiceTests
     [Fact]
     public async Task MakeCorrection_SHOULD_ReturnFailResponse_WHEN_FailedToSavePendency()
     {
-        var exercise = new ExerciseBuilder().Build();
+        var exercise = new ExerciseBuilder()
+            .WithOwnerId("ownerId")
+            .Build();
+
         var configuration = new ConfigurationBuilder().Build();
         var correction = new CorrectionBuilder()
             .WithCorrections(new()
@@ -277,7 +297,7 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseRepository.Setup(x => x.Update(It.IsAny<string>(), It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
@@ -291,7 +311,7 @@ public class CorrectionServiceTests
 
         var request = new CreateCorrectionRequestBuilder().Build();
 
-        var result = await correctionService.MakeCorrection(exercise.Id, request);
+        var result = await correctionService.MakeCorrection(exercise.Id, "ownerId", request);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Failed to save pendency");

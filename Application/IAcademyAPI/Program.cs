@@ -1,9 +1,12 @@
 using System.Text.Json.Serialization;
+using CrossCutting.Constants;
 using Domain.Services;
 using Domain.Validators;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using IAcademyAPI.Infra.APIConfigurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service;
 using Service.Integrations.OpenAI.Configuration;
@@ -23,12 +26,16 @@ public class Program
             builder.Configuration.AddAzureAppConfiguration(options =>
             {
                 options.Connect(Environment.GetEnvironmentVariable("AppConfigConnectionString"))
-                    .Select("IAcademy:Mongo:*")
-                    .Select("IAcademy:ExternalServices:*")
+                    .TrimKeyPrefix($"{AppConstants.AppName}:")
+                    .Select($"{AppConstants.AppName}:Mongo:*")
+                    .Select($"{AppConstants.AppName}:Redis:*")
+                    .Select($"{AppConstants.AppName}:UserManager:Mongo:*")
+                    .Select($"{AppConstants.AppName}:ExternalServices:*")
+                    .Select($"{AppConstants.AppName}:JwtSettings:*")                   
                     .ConfigureRefresh(refreshOptions =>
                     {
                         refreshOptions.SetCacheExpiration(TimeSpan.FromMinutes(1));
-                        refreshOptions.Register("IAcademy", true);
+                        refreshOptions.Register($"{AppConstants.AppName}", true);
                     });
             });
         }
@@ -58,6 +65,7 @@ public class Program
         services.AddScoped<ICorrectionService, CorrectionService>();
         services.AddScoped<IConfigurationService, ConfigurationService>();
         services.AddScoped<IChatCompletionsService, ChatCompletionsService>();
+        services.AddScoped<ICompanyService, CompanyService>();
 
         services.Configure<ApiBehaviorOptions>(options =>
         {
@@ -82,12 +90,21 @@ public class Program
             });
 
         services
+            .AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+
+        services
             .AddSwagger()
             .AddOptions(configuration)
             .AddOpenAIService(configuration)
             .AddRepositories()
+            .AddCacheRepositories(configuration)
             .AddHealthChecks()
-            .AddMongoDb(configuration["IAcademy:MongoDB:ConnectionString"], name: "health-check-mongodb");
+            .AddMongoDb(configuration["MongoDB:ConnectionString"], name: "health-check-mongodb");
     }
 
     public static void ConfigureApp(WebApplication app, IConfiguration configuration)
@@ -99,10 +116,10 @@ public class Program
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
             c.RoutePrefix = "swagger";
             c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+            c.OAuthUseBasicAuthenticationWithAccessCodeGrant();
         });
 
-
-        //app.UseHttpsRedirection();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
     }

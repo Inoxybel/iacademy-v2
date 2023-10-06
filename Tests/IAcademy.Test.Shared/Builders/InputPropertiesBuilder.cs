@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Configuration;
 
 namespace IAcademy.Test.Shared.Builders;
 

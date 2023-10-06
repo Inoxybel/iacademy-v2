@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Content;
-using Domain.Entities;
+using Domain.Entities.Contents;
 
 namespace Domain.Infra;
 

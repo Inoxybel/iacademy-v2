@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Entities.Chat;
 using Domain.Infra;
 using Domain.Services;
 using FluentAssertions;
@@ -49,7 +49,7 @@ namespace IAcademy.Test.Unit.Services
             var result = await _service.Get("chatId");
 
             result.Success.Should().BeTrue();
-            result.ErrorMessage.Should().BeNull();
+            result.ErrorMessage.Should().BeNullOrEmpty();
             result.Data.Should().BeEquivalentTo(repositoryResponse);
         }
 
@@ -81,7 +81,7 @@ namespace IAcademy.Test.Unit.Services
             var result = await _service.Save(repositoryRequest);
 
             result.Success.Should().BeTrue();
-            result.ErrorMessage.Should().BeNull();
+            result.ErrorMessage.Should().BeNullOrEmpty();
             result.Data.Should().BeEquivalentTo(repositoryResponse);
         }
     }

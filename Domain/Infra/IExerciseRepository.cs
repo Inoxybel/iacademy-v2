@@ -1,5 +1,5 @@
 ﻿using CrossCutting.Enums;
-using Domain.Entities;
+using Domain.Entities.Exercise;
 
 namespace Domain.Infra;
 

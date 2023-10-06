@@ -1,6 +1,6 @@
 ﻿using CrossCutting.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Entities.Exercise;
 
 public class Activity
 {

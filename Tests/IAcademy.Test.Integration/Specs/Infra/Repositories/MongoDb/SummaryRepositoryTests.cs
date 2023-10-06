@@ -1,5 +1,5 @@
 ﻿using Domain.DTO.Summary;
-using Domain.Entities;
+using Domain.Entities.Summary;
 using Domain.Infra;
 using FluentAssertions;
 using IAcademy.Test.Integration.Base;
@@ -123,7 +123,13 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary
         });
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(category, false);
+        var summaryIds = new List<string>()
+        {
+            firstSummary.Id, 
+            secondSummary.Id
+        };
+
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(summaryIds, category, false);
 
         result.Should().NotBeEmpty();
         result.Count.Should().Be(2);
@@ -143,7 +149,13 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary
         });
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(category, false);
+        var summaryIds = new List<string>()
+        {
+            firstSummary.Id,
+            secondSummary.Id
+        };
+
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(summaryIds, category, false);
 
         result.Should().NotBeEmpty();
         result.Count.Should().Be(2);
@@ -164,9 +176,39 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary
         });
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategoryAndSubcategory(category, subcategory, false);
+        var summaryIds = new List<string>()
+        {
+            firstSummary.Id,
+            secondSummary.Id
+        };
+
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategoryAndSubcategory(summaryIds, category, subcategory, false);
 
         result.Should().NotBeEmpty();
         result.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ShouldReturnEnrollConfirmation()
+    {
+        var id = Guid.NewGuid().ToString();
+        var originId = Guid.NewGuid().ToString();
+        var ownerId = Guid.NewGuid().ToString();
+
+        var summary = new SummaryBuilder()
+            .WithId(id)
+            .WithOriginId(originId)
+            .WithOwnerId(ownerId)
+            .Build();
+
+        await _fixture.DbContext.Summary.InsertOneAsync(summary);
+
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().IsEnrolled(originId, ownerId);
+
+        result.Should().BeTrue();
+
+        result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().IsEnrolled(id, ownerId);
+
+        result.Should().BeFalse();
     }
 }

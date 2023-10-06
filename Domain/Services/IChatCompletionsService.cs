@@ -1,5 +1,5 @@
 ﻿using Domain.DTO;
-using Domain.Entities;
+using Domain.Entities.Chat;
 
 namespace Domain.Services
 {

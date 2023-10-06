@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using CrossCutting.Extensions;
 using Domain.Entities;
+using Domain.Entities.Chat;
+using Domain.Entities.Configuration;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -26,7 +28,7 @@ public class OpenAIService : IOpenAIService
         _options = options;
     }
 
-    public async Task<OpenAIResponse> DoRequest(string objStringified)
+    public async Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput)
     {
         var objRequest = new OpenAIRequest()
         {
@@ -35,8 +37,13 @@ public class OpenAIService : IOpenAIService
                 {
                     new Message()
                     {
+                        Role = "system",
+                        Content = configurations.InitialInput
+                    },
+                    new Message()
+                    {
                         Role = "user",
-                        Content = objStringified
+                        Content = configurations.FinalInput.Replace("{THEME}", userInput)
                     }
                 },
             Temperature = 0.8
@@ -66,32 +73,40 @@ public class OpenAIService : IOpenAIService
         if (response.IsSuccessStatusCode)
         {
             var openIAResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent);
-            return openIAResponse;
+            return openIAResponse!;
         }
 
         return new OpenAIResponse();
     }
 
-    public async Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, string prompt)
+    public async Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput)
     {
+        var recoveredMessage = chatCompletion.Choices.First().Message;
+
         var objRequest = new OpenAIRequest()
         {
             Model = _options.Value.Model,
-            Messages = chatCompletion.Choices.Select(choice => new Message 
-                { 
-                    Role = choice.Message.Role, 
-                    Content = choice.Message.Content 
+            Messages = new()
+            {
+                new()
+                {
+                    Role = "system",
+                    Content = configurations.InitialInput
+                },
+                new()
+                {
+                    Role = recoveredMessage.Role,
+                    Content = recoveredMessage.Content
+                },
+                new()
+                {
+                    Role = "user",
+                    Content = configurations.FinalInput.Replace("{REQUEST}", userInput)
                 }
-            ).ToList(),
+            },
             Temperature = 0.7,
             MaxTokens = 7000
         };
-
-        objRequest.Messages.Add(new Message()
-        {
-            Role = "user",
-            Content = prompt
-        });
 
         var settings = new JsonSerializerSettings
         {
@@ -117,7 +132,7 @@ public class OpenAIService : IOpenAIService
         if (response.IsSuccessStatusCode)
         {
             var openIAResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent);
-            return openIAResponse;
+            return openIAResponse!;
         }
 
         return new OpenAIResponse();
