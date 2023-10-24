@@ -113,6 +113,7 @@ public class GeneratorService : IGeneratorService
         exercise.Type = ExerciseType.Default;
         exercise.TopicIndex = content.SubtopicIndex;
         exercise.Title = content.Title;
+        exercise.SummaryId = content.SummaryId;
 
         var exerciseSaveResponse = await _exerciseRepository.Save(exercise, cancellationToken);
 

@@ -1,4 +1,5 @@
-﻿using Domain.DTO;
+﻿using CrossCutting.Helpers;
+using Domain.DTO;
 using Domain.DTO.Configuration;
 using Domain.Entities.Configuration;
 using Domain.Infra;
@@ -25,11 +26,22 @@ public class ConfigurationService : IConfigurationService
         return ServiceResult<Configuration>.MakeSuccessResult(configuration);
     }
 
+    public async Task<ServiceResult<PaginatedResult<Configuration>>> GetAll(PaginationRequest pagination, CancellationToken cancellationToken = default)
+    {
+        var configurations = await _repository.GetAll(pagination, cancellationToken);
+
+        if (configurations.Data is null)
+            return ServiceResult<PaginatedResult<Configuration>>.MakeErrorResult("Any configuration has been finded");
+
+        return ServiceResult<PaginatedResult<Configuration>>.MakeSuccessResult(configurations);
+    }
+
     public async Task<ServiceResult<ConfigurationResponse>> Create(ConfigurationRequest configuration, CancellationToken cancellationToken = default)
     {
         var newConfiguration = new Configuration
         {
             Id = Guid.NewGuid().ToString(),
+            Name = configuration.Name,
             Summary = configuration.Summary,
             FirstContent = configuration.FirstContent,
             NewContent = configuration.NewContent,
@@ -40,7 +52,8 @@ public class ConfigurationService : IConfigurationService
 
         var response = new ConfigurationResponse
         {
-            Id = newConfiguration.Id
+            Id = newConfiguration.Id,
+            Name = newConfiguration.Name
         };
 
         bool isSuccess = await _repository.Save(newConfiguration, cancellationToken);

@@ -2,12 +2,13 @@
 using Domain.DTO;
 using Domain.DTO.Summary;
 using Domain.Entities.Contents;
+using CrossCutting.Enums;
 
 namespace Domain.Services;
 
 public interface IContentService
 {
-    Task<ServiceResult<string>> MakeAlternativeContent(string contentId, SubcontentRecreationRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<string>> MakeAlternativeContent(string contentId, SubcontentRecreationRequest request, List<TextGenre> textGenres, CancellationToken cancellationToken = default);
     Task<ServiceResult<string>> MakeContent(string summaryId, AIContentCreationRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<Content>> Get(string id, CancellationToken cancellationToken = default);
     Task<ServiceResult<List<Content>>> GetAllBySummaryId(string summaryId, CancellationToken cancellationToken = default);

@@ -1,4 +1,5 @@
-﻿using CrossCutting.Extensions;
+﻿using CrossCutting.Enums;
+using CrossCutting.Extensions;
 using Domain.DTO;
 using Domain.DTO.Content;
 using Domain.DTO.Summary;
@@ -48,7 +49,7 @@ public class ContentService : IContentService
     {
         var content = await _contentRepository.Get(id, cancellationToken);
 
-        if (content == null)
+        if (content is null)
             return ServiceResult<Content>.MakeErrorResult("Content not found.");
 
         return ServiceResult<Content>.MakeSuccessResult(content);
@@ -109,8 +110,6 @@ public class ContentService : IContentService
 
         return ServiceResult<List<string>>.MakeSuccessResult(repositoryResponse);
     }
-
-
 
     public async Task<ServiceResult<bool>> Update(string contentId, ContentRequest request, CancellationToken cancellationToken = default)
     {
@@ -209,19 +208,13 @@ public class ContentService : IContentService
         if (!makeExerciseResult.Success)
             return ServiceResult<string>.MakeErrorResult("Error to make exercise");
 
-        newContent.ExerciseId = makeExerciseResult.Data;
-
-        saveContentResult = await _contentRepository.Save(newContent, cancellationToken);
-
-        if (string.IsNullOrEmpty(saveContentResult))
-            return ServiceResult<string>.MakeErrorResult("Error to update content");
-
         subtopic.ContentId = newContent.Id;
         subtopic.ExerciseId = makeExerciseResult.Data;
 
         var summaryUpdateRequest = new SummaryRequest()
         {
             OwnerId = summary.OwnerId,
+            ChatId = summary.ChatId,
             ConfigurationId = summary.ConfigurationId,
             IsAvaliable = summary.IsAvaliable,
             Category = summary.Category,
@@ -239,12 +232,47 @@ public class ContentService : IContentService
         return ServiceResult<string>.MakeSuccessResult(newContent.Id);
     }
 
-    public async Task<ServiceResult<string>> MakeAlternativeContent(string contentId, SubcontentRecreationRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> MakeAlternativeContent(
+        string contentId, 
+        SubcontentRecreationRequest request, 
+        List<TextGenre> textGenres,
+        CancellationToken cancellationToken = default)
     {
         var content = await _contentRepository.Get(contentId, cancellationToken);
 
         if (content is null)
             return ServiceResult<string>.MakeErrorResult("Content not found");
+
+        var contents = content.Body.Contents;
+
+        if (ValidateIndexOutOfRange(request.SubcontentIndex, contents.Count))
+            return ServiceResult<string>.MakeErrorResult("Invalid index");
+
+        if (contents[request.SubcontentIndex].SubcontentHistory.Count >= textGenres.Count)
+            return ServiceResult<string>.MakeErrorResult("All genres was generated");
+
+        var textGenre = GetNextGenre(textGenres, contents[request.SubcontentIndex].SubcontentHistory);
+
+        var masterContent = await _contentRepository.Get(content.OriginId, cancellationToken);
+
+        if (masterContent is null)
+            return ServiceResult<string>.MakeErrorResult("Original content not found");
+
+        var subcontentPreviousGenerated = masterContent.FindSubcontentHistoryByIndexAndGenre(request.SubcontentIndex, textGenre);
+
+        if (subcontentPreviousGenerated is not null)
+        {
+            var recoveredContentList = MakeNewContentList(content.Body.Contents, request.SubcontentIndex, subcontentPreviousGenerated.Content, textGenre);
+
+            content.Body.Contents = recoveredContentList;
+
+            var updateContentResult = await _contentRepository.Save(content, cancellationToken);
+
+            if (string.IsNullOrEmpty(updateContentResult))
+                return ServiceResult<string>.MakeErrorResult("Error to update content");
+
+            return ServiceResult<string>.MakeSuccessResult(string.Empty);
+        }
 
         var getConfigurationResult = await _configurationService.Get(content.ConfigurationId, cancellationToken);
 
@@ -253,16 +281,11 @@ public class ContentService : IContentService
 
         var configuration = getConfigurationResult.Data;
 
-        var contents = content.Body.Contents;
-
-        if (ValidateIndexOutOfRange(request.SubcontentIndex, contents.Count))
-            return ServiceResult<string>.MakeErrorResult("Invalid index");
-
         var openAIResponse = new OpenAIResponse();
 
         if (string.IsNullOrEmpty(content.ChatId))
         {
-            openAIResponse = await CommonRequestOpenAPI(contents, request, configuration);
+            openAIResponse = await CommonRequestOpenAPI(textGenre, contents, configuration, request);
         }
         else
         {
@@ -270,12 +293,19 @@ public class ContentService : IContentService
 
             if(chatCompletionResponse.Success)
             {
-
-                openAIResponse = await _openAIService.DoRequest(chatCompletionResponse.Data, configuration.NewContent, string.Empty);
+                var getSubcontentTarget = contents[request.SubcontentIndex].SubcontentHistory;
+                var getLastSubcontent = content.FindSubcontentHistoryByIndexAndGenre(request.SubcontentIndex, GetCurrentGenre(getSubcontentTarget)).Content;
+                
+                openAIResponse = await _openAIService.DoRequest(
+                    chatCompletionResponse.Data, 
+                    configuration.NewContentWithChat,
+                    getLastSubcontent?? string.Empty,
+                    textGenre.ToString()
+                );
             }
             else
             {
-                openAIResponse = await CommonRequestOpenAPI(contents, request, configuration);
+                openAIResponse = await CommonRequestOpenAPI(textGenre, contents, configuration, request);
             }
         } 
 
@@ -290,13 +320,14 @@ public class ContentService : IContentService
         if (recreatedContent is null || string.IsNullOrEmpty(recreatedContent.NewContent))
             return ServiceResult<string>.MakeErrorResult("Error to deserialize generated content.");
 
-        var newContentList = MakeNewContentList(content.Body.Contents, request.SubcontentIndex, recreatedContent.NewContent);
+        masterContent.Body.Contents = MakeNewContentList(masterContent.Body.Contents, request.SubcontentIndex, recreatedContent.NewContent, textGenre);
+        var newContentList = MakeNewContentList(content.Body.Contents, request.SubcontentIndex, recreatedContent.NewContent, textGenre);
 
         content.Body.Contents = newContentList;
 
-        var saveContentResult = await _contentRepository.Save(content, cancellationToken);
+        var saveContentResult = await _contentRepository.SaveAll(new(){content, masterContent}, cancellationToken);
 
-        if (string.IsNullOrEmpty(saveContentResult))
+        if (!saveContentResult.Any())
             return ServiceResult<string>.MakeErrorResult("Error to update content");
 
         return ServiceResult<string>.MakeSuccessResult(contentId);
@@ -385,12 +416,33 @@ public class ContentService : IContentService
         return ServiceResult<string>.MakeSuccessResult(summaryRepositoryResponse.Data);
     }
 
-    private async Task<OpenAIResponse> CommonRequestOpenAPI(List<Subcontent> contents, SubcontentRecreationRequest request, Configuration configuration)
+    private static TextGenre GetNextGenre(List<TextGenre> textGenres, List<SubcontentHistory> contents)
+    {
+        var lastGenre = contents.Single(c => c.DisabledDate == DateTime.MinValue).TextGenre;
+        int lastGenreIndex = textGenres.IndexOf(lastGenre);
+
+        return textGenres[lastGenreIndex + 1];
+    }
+
+    private static TextGenre GetCurrentGenre(List<SubcontentHistory> contents)
+    {
+        var lastGenre = contents.Single(c => c.DisabledDate == DateTime.MinValue).TextGenre;
+
+        return lastGenre;
+    }
+
+    private async Task<OpenAIResponse> CommonRequestOpenAPI(
+        TextGenre textGenre,
+        List<Subcontent> contents, 
+        Configuration configuration, 
+        SubcontentRecreationRequest request)
     {
         var partToRegenerate = GetSubcontentHistory(contents, request);
 
-        if (partToRegenerate?.Content is null)
+        if (partToRegenerate.Content is null)
             return new();
+
+        configuration.NewContent.InitialInput = configuration.NewContent.InitialInput.Replace("{TEXTGENRE}", textGenre.ToString());
 
         return await _openAIService.DoRequest(configuration.NewContent, partToRegenerate.Content);
     }
@@ -423,6 +475,7 @@ public class ContentService : IContentService
                             new SubcontentHistory()
                             {
                                 Content = c,
+                                TextGenre = TextGenre.Informativo,
                                 CreatedDate = DateTime.UtcNow,
                                 DisabledDate = DateTime.MinValue
                             }
@@ -485,9 +538,18 @@ public class ContentService : IContentService
                 content.ExerciseId = content.ExerciseId is not null ? exerciseIdMap[content.ExerciseId] : null;
                 content.OwnerId = summary.OwnerId;
                 content.SummaryId = summary.Id;
+                content.OriginId = content.Id;
                 content.Id = contentIdMap[content.Id];
                 content.CreatedDate = DateTime.UtcNow;
                 content.UpdatedDate = DateTime.MinValue;
+                content.Body.Contents.ForEach(subcontent =>
+                {
+                    var historyForGenre = subcontent.SubcontentHistory
+                        .Where(history => history.TextGenre == TextGenre.Informativo)
+                        .ToList();
+
+                    subcontent.SubcontentHistory = historyForGenre;
+                });
             }
         });
 
@@ -516,7 +578,7 @@ public class ContentService : IContentService
         return summary;
     }
 
-    private static List<Subcontent> MakeNewContentList(List<Subcontent> contents, int subtopicIndex, string newContent)
+    private static List<Subcontent> MakeNewContentList(List<Subcontent> contents, int subtopicIndex, string newContent, TextGenre textGenre)
     {
         var contentToDesactive = contents[subtopicIndex].SubcontentHistory.Find(b => b.DisabledDate == DateTime.MinValue);
 
@@ -529,6 +591,7 @@ public class ContentService : IContentService
             new()
             {
                 Content = newContent,
+                TextGenre = textGenre,
                 CreatedDate = DateTime.UtcNow,
                 DisabledDate = DateTime.MinValue
             },
@@ -540,13 +603,6 @@ public class ContentService : IContentService
         contents[subtopicIndex].SubcontentHistory = newContentList;
 
         return contents;
-    }
-
-    private static string MakeOpenAIFirstContentRequest(InputProperties configuration, string topicIndex)
-    {
-        var request = $"{configuration.InitialInput}: {topicIndex} {configuration.FinalInput}";
-
-        return request;
     }
 
     private static string MakeOpenAIRequest(string theme, string title)

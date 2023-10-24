@@ -1,13 +1,15 @@
-﻿namespace Domain.Entities.Contents;
+﻿using CrossCutting.Enums;
 
-public class Body
-{
-    public List<Subcontent> Contents { get; set; }
+namespace Domain.Entities.Contents;
 
-    public string GetAllActiveContent() =>
-        string.Join(" ", Contents
-            .SelectMany(sc => sc.SubcontentHistory)
-            .Where(h => h.DisabledDate == DateTime.MinValue)
-            .Select(h => h.Content)
-        );
-}
+    public class Body
+    {
+        public List<Subcontent> Contents { get; set; }
+
+        public string GetAllActiveContent() =>
+            string.Join(" ", Contents
+                .SelectMany(sc => sc.SubcontentHistory)
+                .Where(h => h.DisabledDate == DateTime.MinValue)
+                .Select(h => h.Content)
+            );
+    }

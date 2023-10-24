@@ -103,10 +103,10 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary
         });
 
-        var result = await  _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByOwnerId(ownerId, false);
+        var result = await  _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByOwnerId(new(), ownerId, false);
 
-        result.Should().NotBeEmpty();
-        result.Count.Should().Be(2);
+        result.Data.Should().NotBeEmpty();
+        result.Data.Count.Should().Be(2);
     }
 
     [Fact]
@@ -129,10 +129,10 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary.Id
         };
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(summaryIds, category, false);
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(new(), summaryIds, category, false);
 
-        result.Should().NotBeEmpty();
-        result.Count.Should().Be(2);
+        result.Data.Should().NotBeEmpty();
+        result.Data.Count.Should().Be(2);
     }
 
     [Fact]
@@ -155,10 +155,10 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary.Id
         };
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(summaryIds, category, false);
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategory(new(), summaryIds, category, false);
 
-        result.Should().NotBeEmpty();
-        result.Count.Should().Be(2);
+        result.Data.Should().NotBeEmpty();
+        result.Data.Count.Should().Be(2);
     }
 
     [Fact]
@@ -182,10 +182,10 @@ public class SummaryRepositoryTests : IntegrationTestBase
             secondSummary.Id
         };
 
-        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategoryAndSubcategory(summaryIds, category, subcategory, false);
+        var result = await _fixture.serviceProvider.GetRequiredService<ISummaryRepository>().GetAllByCategoryAndSubcategory(new(), summaryIds, category, subcategory, false);
 
-        result.Should().NotBeEmpty();
-        result.Count.Should().Be(2);
+        result.Data.Should().NotBeEmpty();
+        result.Data.Count.Should().Be(2);
     }
 
     [Fact]

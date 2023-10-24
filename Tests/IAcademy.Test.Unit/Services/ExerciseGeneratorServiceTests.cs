@@ -86,7 +86,7 @@ namespace IAcademy.Test.Unit.Services
 
             var openAIResponse = new OpenAIResponse();
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
             var result = await _exerciseGeneratorService.MakeExercise("testContentId");
@@ -150,7 +150,7 @@ namespace IAcademy.Test.Unit.Services
 
             var openAIResponse = new OpenAIResponse();
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
             var result = await _exerciseGeneratorService.MakePendency("testContentId", "oldExercise", config);
@@ -194,10 +194,7 @@ namespace IAcademy.Test.Unit.Services
                     new ChoicesBuilder()
                     .WithMessage(new MessageBuilder()
                         .WithContent(
-                            "[{\"Identification\":1,\"Type\":0,\"Question\":\"Which are the prime numbers?\"," +
-                            "\"Complementation\":[\"1\",\"2\",\"3\",\"4\"],\"Answer\":\"2,3\"}," +
-                            "{\"Identification\":2,\"Type\":2,\"Question\":\"Write a Hello World in C#.\"," +
-                            "\"Complementation\":[],\"Answer\":\"Console.WriteLine(\\\"Hello World\\\");\"}]"
+                            "{\"Exercises\": [{\"Identification\":1,\"Type\":0,\"Question\":\"Which are the prime numbers?\",\"Complementation\":[\"1\",\"2\",\"3\",\"4\"],\"Answer\":\"2,3\"},{\"Identification\":2,\"Type\":2,\"Question\":\"Write a Hello World in C#.\",\"Complementation\":[],\"Answer\":\"Console.WriteLine(\\\"Hello World\\\");\"}]}"
                          )
                         .Build()
                     )
@@ -215,7 +212,7 @@ namespace IAcademy.Test.Unit.Services
                     Data = config 
                 });
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(openAIResponse);
 
             _mockExerciseRepository.Setup(m => m.Save(It.IsAny<Exercise>(), default))

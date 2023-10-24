@@ -1,4 +1,6 @@
-﻿using CrossCutting.Helpers;
+﻿using CrossCutting.Enums;
+using CrossCutting.Extensions;
+using CrossCutting.Helpers;
 using Domain.DTO;
 using Domain.DTO.Content;
 using Domain.DTO.Correction;
@@ -7,7 +9,13 @@ using Domain.Entities.Feedback;
 using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace IAcademyAPI.Controllers.v1;
 
@@ -50,7 +58,7 @@ public class AIController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _summaryService.RequestCreationToAI(request, cancellationToken);
@@ -74,7 +82,7 @@ public class AIController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _contentService.MakeContent(summaryId, request, cancellationToken);
@@ -97,11 +105,14 @@ public class AIController : ControllerBase
             return BadRequest(ModelState);
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
+        var textGenres = User.FindFirst("TextGenres")?.Value;
 
-        if (string.IsNullOrEmpty(ownerId))
+        if (string.IsNullOrEmpty(ownerId) || string.IsNullOrEmpty(textGenres))
             return BadRequest("Invalid Token");
 
-        var result = await _contentService.MakeAlternativeContent(contentId, request, cancellationToken);
+        var listTextGenres = textGenres.Deserialize<List<TextGenre>>();
+
+        var result = await _contentService.MakeAlternativeContent(contentId, request, listTextGenres, cancellationToken);
 
         return result.Success ? NoContent() : BadRequest(result.ErrorMessage);
     }
@@ -118,7 +129,7 @@ public class AIController : ControllerBase
     {
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _exerciseService.MakeExercise(contentId, cancellationToken);

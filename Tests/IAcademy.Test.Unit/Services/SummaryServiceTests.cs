@@ -10,6 +10,7 @@ using IAcademy.Test.Shared.Builders;
 using Domain.Entities.Summary;
 using Domain.Entities.Configuration;
 using Domain.Entities.Chat;
+using CrossCutting.Helpers;
 
 namespace IAcademy.Test.Unit.Services
 {
@@ -71,16 +72,19 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllByCategory_SHOULD_Return_Success_WHEN_SummariesExist()
         {
             var category = "testCategory";
-            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<List<string>>(), category, false, default))
-                .ReturnsAsync(new List<Summary> 
+            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), category, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary> 
                 { 
-                    new SummaryBuilder().Build() 
+                    Data = new List<Summary>()
+                    {
+                        new SummaryBuilder().Build()
+                    }
                 });
 
-            var result = await _summaryService.GetAllByCategory(category, "document", "companyRef");
+            var result = await _summaryService.GetAllByCategory(new(), category, "document", "companyRef");
 
             result.Success.Should().BeTrue();
-            result.Data.Count.Should().BeGreaterThan(0);
+            result.Data.Data.Count.Should().BeGreaterThan(0);
         }
 
         [Fact]
@@ -88,10 +92,13 @@ namespace IAcademy.Test.Unit.Services
         {
             var category = "testCategory";
 
-            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<List<string>>(), category, false, default))
-                .ReturnsAsync(new List<Summary>());
+            _mockSummaryRepository.Setup(m => m.GetAllByCategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), category, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>()
+                });
 
-            var result = await _summaryService.GetAllByCategory(category, "document", "companyRef");
+            var result = await _summaryService.GetAllByCategory(new(), category, "document", "companyRef");
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summary not found.");
@@ -102,16 +109,19 @@ namespace IAcademy.Test.Unit.Services
         {
             var category = "testCategory";
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<List<string>>(), category, subcategory, false, default))
-                .ReturnsAsync(new List<Summary> 
-                { 
-                    new SummaryBuilder().Build() 
+            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), category, subcategory, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>
+                    {
+                        new SummaryBuilder().Build()
+                    }
                 });
 
-            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, "document", "companyRef");
+            var result = await _summaryService.GetAllByCategoryAndSubcategory(new(), category, subcategory, "document", "companyRef");
 
             result.Success.Should().BeTrue();
-            result.Data.Count.Should().BeGreaterThan(0);
+            result.Data.Data.Count.Should().BeGreaterThan(0);
         }
 
         [Fact]
@@ -120,10 +130,13 @@ namespace IAcademy.Test.Unit.Services
             var category = "testCategory";
             var subcategory = "testSubcategory";
 
-            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<List<string>>(), category, subcategory, false, default))
-                .ReturnsAsync(new List<Summary>());
+            _mockSummaryRepository.Setup(m => m.GetAllByCategoryAndSubcategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), category, subcategory, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>()
+                });
 
-            var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, "document", "companyRef");
+            var result = await _summaryService.GetAllByCategoryAndSubcategory(new(), category, subcategory, "document", "companyRef");
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summaries not found.");
@@ -150,46 +163,55 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllByOwnerId_SHOULD_Return_Success_WHEN_SummariesExist()
         {
             var ownerId = "testOwnerId";
-            _mockSummaryRepository.Setup(m => m.GetAllByOwnerId(ownerId, false, default))
-                .ReturnsAsync(new List<Summary> 
-                { 
-                    new SummaryBuilder()
-                        .WithOwnerId(ownerId)
-                        .Build()
+            _mockSummaryRepository.Setup(m => m.GetAllByOwnerId(It.IsAny<PaginationRequest>(), ownerId, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>
+                    {
+                        new SummaryBuilder()
+                            .WithOwnerId(ownerId)
+                            .Build()
+                    }
                 });
 
-            var result = await _summaryService.GetAllByOwnerId(ownerId);
+            var result = await _summaryService.GetAllByOwnerId(new(), ownerId);
 
             result.Success.Should().BeTrue();
-            result.Data.Count.Should().BeGreaterThan(0);
+            result.Data.Data.Count.Should().BeGreaterThan(0);
         }
 
         [Fact]
         public async Task GetAllBySubcategory_SHOULD_Return_Success_WHEN_SummariesExist()
         {
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<List<string>>(), subcategory, false, default))
-                .ReturnsAsync(new List<Summary> 
-                { 
-                    new SummaryBuilder()
-                        .WithSubcategory(subcategory)
-                        .Build() 
+            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), subcategory, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>()
+                {
+                    Data = new List<Summary>
+                    {
+                        new SummaryBuilder()
+                            .WithSubcategory(subcategory)
+                            .Build()
+                    }
                 });
 
-            var result = await _summaryService.GetAllBySubcategory(subcategory, "document", "companyRef");
+            var result = await _summaryService.GetAllBySubcategory(new(), subcategory, "document", "companyRef");
 
             result.Success.Should().BeTrue();
-            result.Data.Count.Should().BeGreaterThan(0);
+            result.Data.Data.Count.Should().BeGreaterThan(0);
         }
 
         [Fact]
         public async Task GetAllBySubcategory_SHOULD_Return_Failure_WHEN_NoSummariesExist()
         {
             var subcategory = "testSubcategory";
-            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<List<string>>(), subcategory, false, default))
-                .ReturnsAsync(new List<Summary>());
+            _mockSummaryRepository.Setup(m => m.GetAllBySubcategory(It.IsAny<PaginationRequest>(), It.IsAny<List<string>>(), subcategory, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>()
+                });
 
-            var result = await _summaryService.GetAllBySubcategory(subcategory, "document", "companyRef");
+            var result = await _summaryService.GetAllBySubcategory(new(), subcategory, "document", "companyRef");
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summary not found.");
@@ -200,10 +222,13 @@ namespace IAcademy.Test.Unit.Services
         public async Task GetAllByOwnerId_SHOULD_Return_Failure_WHEN_NoSummariesExist()
         {
             var ownerId = "testOwnerId";
-            _mockSummaryRepository.Setup(m => m.GetAllByOwnerId(ownerId, false, default))
-                .ReturnsAsync(new List<Summary>());
+            _mockSummaryRepository.Setup(m => m.GetAllByOwnerId(It.IsAny<PaginationRequest>(), ownerId, false, default))
+                .ReturnsAsync(new PaginatedResult<Summary>
+                {
+                    Data = new List<Summary>()
+                });
 
-            var result = await _summaryService.GetAllByOwnerId(ownerId);
+            var result = await _summaryService.GetAllByOwnerId(new(), ownerId);
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Be("Summary not found.");
@@ -310,7 +335,7 @@ namespace IAcademy.Test.Unit.Services
                     Data = "chatId"
                 });
 
-            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+            _mockOpenAIService.Setup(m => m.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new OpenAIResponseBuilder()
                     .WithChoices(new List<Choices>()
                     {

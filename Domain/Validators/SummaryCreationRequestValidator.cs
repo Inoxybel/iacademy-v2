@@ -1,4 +1,5 @@
-﻿using Domain.DTO.Summary;
+﻿using CrossCutting.Helpers;
+using Domain.DTO.Summary;
 using FluentValidation;
 
 namespace Domain.Validators;
@@ -28,7 +29,8 @@ public class SummaryCreationRequestValidator : AbstractValidator<SummaryCreation
 
         RuleFor(request => request.OwnerId)
             .NotEmpty().WithMessage("The owner ID is required.")
-            .Length(36).WithMessage("The owner ID must be 36 characters long.");
+            .Length(36).WithMessage("The owner ID must be 36 characters long.")
+            .When(r => !MasterOwner.Validate(r.OwnerId));
 
         RuleFor(x => x.Icon)
             .NotEmpty().WithMessage("The SVG Icon string is required.");

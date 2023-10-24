@@ -6,6 +6,6 @@ namespace Service.Integrations.OpenAI.Interfaces;
 
 public interface IOpenAIService
 {
-    Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput);
-    Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput);
+    Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput, string textGenre = "Informative");
+    Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput, string textGenre = "Informative");
 }

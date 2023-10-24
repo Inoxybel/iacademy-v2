@@ -56,12 +56,13 @@ public class SummaryController : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de sumarios</returns>
     [HttpGet("category/{category}")]
-    [ProducesResponseType(typeof(List<Summary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResult<Summary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategory(
+    public async Task<ActionResult<PaginatedResult<Summary>>> GetAllByCategory(
+        [FromQuery] PaginationRequest pagination,
         string category,
-        bool isAvailable = true, 
+        bool isAvailable = true,
         CancellationToken cancellationToken = default)
     {
         var document = User.FindFirst("Document")?.Value;
@@ -70,7 +71,7 @@ public class SummaryController : ControllerBase
         if (string.IsNullOrEmpty(document) || string.IsNullOrEmpty(companyRef))
             return BadRequest("Invalid Token");
 
-        var result = await _summaryService.GetAllByCategory(category, document, companyRef, isAvailable, cancellationToken);
+        var result = await _summaryService.GetAllByCategory(pagination, category, document, companyRef, isAvailable, cancellationToken);
 
         return result.Success ? Ok(result.Data) : NotFound(result.ErrorMessage);
     }
@@ -84,10 +85,15 @@ public class SummaryController : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de sumarios</returns>
     [HttpGet("category/{category}/subcategory/{subcategory}")]
-    [ProducesResponseType(typeof(List<Summary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResult<Summary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByCategoryAndSubcategory(string category, string subcategory, bool isAvailable = true, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PaginatedResult<Summary>>> GetAllByCategoryAndSubcategory(
+        [FromQuery] PaginationRequest pagination, 
+        string category, 
+        string subcategory, 
+        bool isAvailable = true,
+        CancellationToken cancellationToken = default)
     {
         var document = User.FindFirst("Document")?.Value;
         var companyRef = User.FindFirst("CompanyRef")?.Value;
@@ -95,7 +101,7 @@ public class SummaryController : ControllerBase
         if (string.IsNullOrEmpty(document) || string.IsNullOrEmpty(companyRef))
             return BadRequest("Invalid Token");
 
-        var result = await _summaryService.GetAllByCategoryAndSubcategory(category, subcategory, document, companyRef, isAvailable, cancellationToken);
+        var result = await _summaryService.GetAllByCategoryAndSubcategory(pagination, category, subcategory, document, companyRef, isAvailable, cancellationToken);
 
         if (!result.Success)
             return NotFound(result.ErrorMessage);
@@ -110,17 +116,20 @@ public class SummaryController : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de sumarios</returns>
     [HttpGet("enrolled")]
-    [ProducesResponseType(typeof(List<Summary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResult<Summary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllByOwnerId(bool isAvailable = true, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PaginatedResult<Summary>>> GetAllByOwnerId(
+        [FromQuery] PaginationRequest pagination, 
+        bool isAvailable = true,
+        CancellationToken cancellationToken = default)
     {
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
         if (string.IsNullOrEmpty(ownerId))
             return BadRequest("Invalid Token");
 
-        var result = await _summaryService.GetAllByOwnerId(ownerId, isAvailable, cancellationToken);
+        var result = await _summaryService.GetAllByOwnerId(pagination, ownerId, isAvailable, cancellationToken);
 
         if (!result.Success)
             return NotFound(result.ErrorMessage);
@@ -135,10 +144,13 @@ public class SummaryController : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de sumarios</returns>
     [HttpGet("available")]
-    [ProducesResponseType(typeof(List<Summary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResult<Summary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllAvaliableByDocument(bool isAvailable = true, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PaginatedResult<Summary>>> GetAllAvaliableByDocument(
+        [FromQuery] PaginationRequest pagination,
+        bool isAvailable = true, 
+        CancellationToken cancellationToken = default)
     {
         var document = User.FindFirst("Document")?.Value;
         var companyRef = User.FindFirst("CompanyRef")?.Value;
@@ -147,7 +159,7 @@ public class SummaryController : ControllerBase
         if (string.IsNullOrEmpty(document) || string.IsNullOrEmpty(companyRef) || string.IsNullOrEmpty(ownerId))
             return BadRequest("Invalid Token");
 
-        var result = await _summaryService.GetAllAvaliableByDocument(ownerId, document, companyRef, isAvailable, cancellationToken);
+        var result = await _summaryService.GetAllAvaliableByDocument(pagination, ownerId, document, companyRef, isAvailable, cancellationToken);
 
         if (!result.Success)
             return NotFound(result.ErrorMessage);
@@ -163,10 +175,14 @@ public class SummaryController : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de sumarios</returns>
     [HttpGet("subcategory/{subcategory}")]
-    [ProducesResponseType(typeof(List<Summary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResult<Summary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult<ServiceResult<List<Summary>>>> GetAllBySubcategory(string subcategory, bool isAvailable = true, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<Summary>>> GetAllBySubcategory(
+        [FromQuery] PaginationRequest pagination, 
+        string subcategory, 
+        bool isAvailable = true,
+        CancellationToken cancellationToken = default)
     {
         var document = User.FindFirst("Document")?.Value;
         var companyRef = User.FindFirst("CompanyRef")?.Value;
@@ -174,7 +190,7 @@ public class SummaryController : ControllerBase
         if (string.IsNullOrEmpty(document) || string.IsNullOrEmpty(companyRef))
             return BadRequest("Invalid Token");
 
-        var result = await _summaryService.GetAllBySubcategory(subcategory, document, companyRef, isAvailable, cancellationToken);
+        var result = await _summaryService.GetAllBySubcategory(pagination, subcategory, document, companyRef, isAvailable, cancellationToken);
 
         if (!result.Success)
             return NotFound(result.ErrorMessage);
@@ -200,7 +216,7 @@ public class SummaryController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _summaryService.Save(request, string.Empty, cancellationToken);
@@ -258,7 +274,7 @@ public class SummaryController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _summaryService.Update(summaryId, request, cancellationToken);

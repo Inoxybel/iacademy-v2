@@ -1,4 +1,5 @@
 ﻿using CrossCutting.Constants;
+using CrossCutting.Helpers;
 using Domain.DTO.Configuration;
 using Domain.Entities.Configuration;
 using Domain.Infra;
@@ -27,11 +28,16 @@ public class ConfigurationCacheRepository : BaseRedisCacheRepository, IConfigura
 
     public async Task<Configuration> Get(string configurationId, CancellationToken cancellationToken = default)
     {
-        var configuration = await GetOrRefreshCache<Configuration>(configurationId,
+        var configuration = await GetOrRefreshCache(configurationId,
             () => _configurationRepository.Get(configurationId, cancellationToken)
         );
 
         return configuration;
+    }
+
+    public async Task<PaginatedResult<Configuration>> GetAll(PaginationRequest request, CancellationToken cancellationToken = default)
+    {
+        return await _configurationRepository.GetAll(request, cancellationToken);
     }
 
     public async Task<bool> Save(Configuration configuration, CancellationToken cancellationToken = default)

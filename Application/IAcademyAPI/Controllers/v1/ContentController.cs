@@ -80,7 +80,7 @@ public class ContentController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _contentService.Save(request, cancellationToken);
@@ -105,7 +105,7 @@ public class ContentController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _contentService.SaveAll(contents, cancellationToken);
@@ -130,7 +130,7 @@ public class ContentController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _contentService.Update(contentId, request, cancellationToken);
@@ -155,7 +155,7 @@ public class ContentController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _contentService.UpdateAll(summaryId, contents, cancellationToken);

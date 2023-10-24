@@ -1,4 +1,5 @@
-﻿using Domain.DTO.Summary;
+﻿using CrossCutting.Helpers;
+using Domain.DTO.Summary;
 using Domain.Entities.Summary;
 using Domain.Infra;
 using MongoDB.Driver;
@@ -17,54 +18,128 @@ public class SummaryRepository : ISummaryRepository
         await (await _dbContext.Summary.FindAsync(s => s.Id == summaryId, cancellationToken: cancellationToken))
             .FirstOrDefaultAsync(cancellationToken);
 
-    public async Task<List<Summary>> GetAllByOwnerId(
+    public async Task<PaginatedResult<Summary>> GetAllByOwnerId(
+        PaginationRequest pagination,
         string ownerId,
         bool isAvaliable = true,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Summary.FindSync(s => s.OwnerId == ownerId && s.IsAvaliable == isAvaliable, cancellationToken: cancellationToken)
+        var filter = Builders<Summary>.Filter.Where(s => s.OwnerId == ownerId && s.IsAvaliable == isAvaliable);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PaginatedResult<Summary>
+        {
+            Data = data,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
     }
 
-    public async Task<List<Summary>> GetAllByIds(List<string> summaryIds, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllByIds(
+        PaginationRequest pagination,
+        List<string> summaryIds, 
+        bool isAvaliable = true, 
+        CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Summary
-            .FindSync(s => summaryIds.Contains(s.Id) && s.IsAvaliable == isAvaliable, cancellationToken: cancellationToken)
+        var filter = Builders<Summary>.Filter.Where(s => summaryIds.Contains(s.Id) && s.IsAvaliable == isAvaliable);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PaginatedResult<Summary>
+        {
+            Data = data,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
     }
 
-    public async Task<List<Summary>> GetAllByCategory(
+    public async Task<PaginatedResult<Summary>> GetAllByCategory(
+        PaginationRequest pagination,
         List<string> summaryIds,
         string category,
         bool isAvaliable = true,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Summary
-            .FindSync(s => summaryIds.Contains(s.Id) && s.Category == category && s.IsAvaliable == isAvaliable, cancellationToken: cancellationToken)
+        var filter = Builders<Summary>.Filter.Where(s => summaryIds.Contains(s.Id) && s.Category == category && s.IsAvaliable == isAvaliable);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PaginatedResult<Summary>
+        {
+            Data = data,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
     }
 
-    public async Task<List<Summary>> GetAllBySubcategory(
+    public async Task<PaginatedResult<Summary>> GetAllBySubcategory(
+        PaginationRequest pagination,
         List<string> summaryIds,
         string subcategory,
         bool isAvaliable = true,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Summary
-            .FindSync(s => summaryIds.Contains(s.Id) && s.Subcategory == subcategory && s.IsAvaliable == isAvaliable, cancellationToken: cancellationToken)
+        var filter = Builders<Summary>.Filter.Where(s => summaryIds.Contains(s.Id) && s.Subcategory == subcategory && s.IsAvaliable == isAvaliable);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PaginatedResult<Summary>
+        {
+            Data = data,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
     }
 
-    public async Task<List<Summary>> GetAllByCategoryAndSubcategory(
+    public async Task<PaginatedResult<Summary>> GetAllByCategoryAndSubcategory(
+        PaginationRequest pagination,
         List<string> summaryIds,
         string category,
         string subcategory,
         bool isAvaliable = true,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Summary
-            .FindSync(s => summaryIds.Contains(s.Id) && s.Category == category && s.Subcategory == subcategory && s.IsAvaliable == isAvaliable, cancellationToken: cancellationToken)
+        var filter = Builders<Summary>.Filter.Where(s => summaryIds.Contains(s.Id) && s.Category == category && s.Subcategory == subcategory && s.IsAvaliable == isAvaliable);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PaginatedResult<Summary>
+        {
+            Data = data,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
     }
 
     public async Task<bool> Save(Summary summary, CancellationToken cancellationToken = default)

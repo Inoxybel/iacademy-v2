@@ -11,6 +11,7 @@ using Domain.Entities.Exercise;
 using Domain.Entities.Feedback;
 using Domain.Entities.Configuration;
 using Domain.Services;
+using Domain.DTO;
 
 namespace IAcademy.Test.Unit.Services;
 
@@ -193,7 +194,7 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(new OpenAIResponse 
             { 
                 Id = string.Empty 
@@ -242,11 +243,18 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockCorrectionRepository.Setup(x => x.Save(It.IsAny<Correction>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+
+        _mockSummaryService.Setup(x => x.UpdateProgress(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<bool>()
+            {
+                Success = true,
+                Data = true
+            });
 
         var request = new CreateCorrectionRequestBuilder().Build();
 
@@ -297,7 +305,7 @@ public class CorrectionServiceTests
         _mockConfigurationRepository.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuration);
 
-        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(x => x.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseRepository.Setup(x => x.Update(It.IsAny<string>(), It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
@@ -308,6 +316,16 @@ public class CorrectionServiceTests
 
         _mockExerciseRepository.Setup(x => x.Save(It.IsAny<Exercise>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+
+        _mockSummaryService.Setup(x => x.UpdateProgress(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ServiceResult<bool>()
+            {
+                Success = true,
+                Data = true
+            });
+
+        _mockSummaryService.Setup(x => x.ShouldGeneratePendency(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var request = new CreateCorrectionRequestBuilder().Build();
 

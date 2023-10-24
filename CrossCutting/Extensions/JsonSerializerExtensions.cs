@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
+using CrossCutting.Enums;
 
 namespace CrossCutting.Extensions;
 
@@ -8,12 +9,21 @@ public static class JsonSerializerExtensions
     private static readonly JsonSerializerOptions camelCaseOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     private static readonly JsonSerializerOptions defaultOptions = new()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    private static readonly JsonSerializerOptions enumOptions = new()
+    {
+        Converters =
+        {
+            new JsonStringEnumConverter(),
+            new TextGenreConverter()
+        }
     };
 
     public static string Serialize<T>(this T objectToSerialize) => JsonSerializer.Serialize(objectToSerialize, camelCaseOptions);
@@ -45,7 +55,13 @@ public static class JsonSerializerExtensions
             catch (Exception exInner)
             {
                 Console.WriteLine(exInner);
-                return new();
+
+                var lastRetry = JsonSerializer.Deserialize<T>(stringToDeserialize, enumOptions);
+
+                if (lastRetry is null)
+                    return new();
+
+                return lastRetry;
             }
         }
     }
@@ -64,5 +80,23 @@ public static class JsonSerializerExtensions
             .Replace(@"\\\n", @"\\n");
 
         return correctedString;
+    }
+}
+
+public class TextGenreConverter : JsonConverter<TextGenre>
+{
+    public override TextGenre Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString();
+        if (Enum.TryParse<TextGenre>(value, out var result))
+        {
+            return result;
+        }
+        throw new JsonException($"Value {value} cannot be converted to type {typeToConvert}.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, TextGenre value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString());
     }
 }

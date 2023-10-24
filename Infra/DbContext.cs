@@ -13,6 +13,8 @@ namespace Infra;
 
 public class DbContext
 {
+    private readonly IMongoDatabase _database;
+    private readonly IMongoDatabase _userManagerDatabase;
     public IMongoCollection<Summary> Summary { get; }
     public IMongoCollection<Configuration> Configuration { get; }
     public IMongoCollection<Content> Content { get; }
@@ -26,17 +28,23 @@ public class DbContext
     public DbContext(IOptions<DatabaseInstanceOptions> databaseInstanceOptions)
     {
         var client = new MongoClient(databaseInstanceOptions.Value.ConnectionString);
-        var database = client.GetDatabase(databaseInstanceOptions.Value.Name);
+        _database = client.GetDatabase(databaseInstanceOptions.Value.Name);
 
         var userManagerClient = new MongoClient(databaseInstanceOptions.Value.UserManagerConnectionString);
-        var userManagerDatabase = userManagerClient.GetDatabase(databaseInstanceOptions.Value.UserManagerDBName);
+        _userManagerDatabase = userManagerClient.GetDatabase(databaseInstanceOptions.Value.UserManagerDBName);
 
-        Summary = database.GetCollection<Summary>(nameof(Summary));
-        Configuration = database.GetCollection<Configuration>(nameof(Configuration));
-        Content = database.GetCollection<Content>(nameof(Content));
-        Correction = database.GetCollection<Correction>(nameof(Correction));
-        Exercise = database.GetCollection<Exercise>(nameof(Exercise));
-        ChatCompletion = database.GetCollection<ChatCompletion>(nameof(ChatCompletion));
-        Company = userManagerDatabase.GetCollection<Company>(nameof(Company));
+        Summary = _database.GetCollection<Summary>(nameof(Summary));
+        Configuration = _database.GetCollection<Configuration>(nameof(Configuration));
+        Content = _database.GetCollection<Content>(nameof(Content));
+        Correction = _database.GetCollection<Correction>(nameof(Correction));
+        Exercise = _database.GetCollection<Exercise>(nameof(Exercise));
+        ChatCompletion = _database.GetCollection<ChatCompletion>(nameof(ChatCompletion));
+        Company = _userManagerDatabase.GetCollection<Company>(nameof(Company));
+    }
+
+    public async Task DropCollection(string collectionName)
+    {
+        await _database.DropCollectionAsync(collectionName);
+        await _userManagerDatabase.DropCollectionAsync(collectionName);
     }
 }

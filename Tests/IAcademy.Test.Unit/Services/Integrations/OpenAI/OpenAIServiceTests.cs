@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Domain.Entities.Configuration;
+using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
@@ -31,6 +32,12 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
         [Fact]
         public async Task DoRequest_Should_ReturnsValidObject_WHEN_OpenAIAPI_Responds_With_Success()
         {
+            var configurations = new InputProperties()
+            {
+                InitialInput = "",
+                FinalInput = ""
+            };
+
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("{\"choices\":[{\"finish_reason\":\"stop\",\"index\": 0,\"message\": {\"content\":\"Message\",\"role\":\"assistant\"}}],\"created\":1677664795,\"id\":\"chatcmpl-7QyqpwdfhqwajicIEznoc6Q47XAyW\",\"model\":\"gpt-4\",\"object\":\"chat.completion\",\"usage\": {\"completion_tokens\": 17,\"prompt_tokens\":57,\"total_tokens\":74}}", Encoding.UTF8, "application/json")
@@ -47,7 +54,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest(new(), "Test request");
+            var result = await _service.DoRequest(configurations, "Test request");
 
             result.Should().NotBeNull();
             result.Choices.Should().NotBeNullOrEmpty();
@@ -56,6 +63,12 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
         [Fact]
         public async Task DoRequest_Should_ReturnsEmptyObject_WHEN_OpenAIAPI_Responds_With_Unsucess()
         {
+            var configurations = new InputProperties()
+            {
+                InitialInput = "",
+                FinalInput = ""
+            };
+
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadRequest);
 
             _mockHttpMessageHandler.Protected()
@@ -69,7 +82,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest(new(), "Test request");
+            var result = await _service.DoRequest(configurations, "Test request");
 
             result.Should().NotBeNull();
             result.Choices.Should().BeNullOrEmpty();
@@ -78,6 +91,12 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
         [Fact]
         public async Task DoRequest_Should_Retry_Twice_WHEN_OpenAI_Responds_Non_4XX_Error()
         {
+            var configurations = new InputProperties()
+            {
+                InitialInput = "",
+                FinalInput = ""
+            };
+
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError);
 
             _mockHttpMessageHandler.Protected()
@@ -91,7 +110,7 @@ namespace IAcademy.Test.Unit.Services.Integrations.OpenAI
 
             _service = new OpenAIService(httpClient, _mockOptions.Object);
 
-            var result = await _service.DoRequest(new(), "Test request");
+            _ = await _service.DoRequest(configurations, "Test request");
 
             _mockHttpMessageHandler.Protected().Verify(
                 "SendAsync", 

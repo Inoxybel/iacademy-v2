@@ -1,9 +1,11 @@
-﻿using Domain.Entities.Configuration;
+﻿using CrossCutting.Helpers;
+using Domain.Entities.Configuration;
 
 namespace Domain.DTO.Configuration;
 
 public class ConfigurationRequest
-{
+{ 
+    public string Name { get; set; }
     public InputProperties Summary { get; set; }
     public InputProperties FirstContent { get; set; }
     public InputProperties NewContent { get; set; }

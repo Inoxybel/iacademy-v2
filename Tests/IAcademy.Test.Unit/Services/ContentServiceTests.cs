@@ -1,4 +1,5 @@
-﻿using Domain.DTO;
+﻿using CrossCutting.Enums;
+using Domain.DTO;
 using Domain.DTO.Content;
 using Domain.DTO.Summary;
 using Domain.Entities.Chat;
@@ -30,9 +31,18 @@ public class ContentServiceTests
     private readonly ContentService contentService;
     private readonly SummaryMatriculationRequest _validRequest;
     private readonly SummaryMatriculationRequest _invalidRequest;
+    private readonly List<TextGenre> textGenres;
 
     public ContentServiceTests()
     {
+        textGenres = new()
+        {
+            TextGenre.Informativo,
+            TextGenre.Explicativo,
+            TextGenre.Narrativo,
+            TextGenre.Argumentativo
+        };
+
         contentService = new(
             _mockContentRepository.Object,
             _mockSummaryService.Object,
@@ -419,7 +429,7 @@ public class ContentServiceTests
         _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatCompletionsReturn);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
@@ -479,7 +489,7 @@ public class ContentServiceTests
         _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatCompletionsReturn);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
@@ -546,7 +556,7 @@ public class ContentServiceTests
         _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatCompletionsReturn);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -559,81 +569,6 @@ public class ContentServiceTests
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Contain("Error to make exercise");
-    }
-
-    [Fact]
-    public async Task MakeContent_SHOULD_Return_Error_WHEN_Update_Content_Fails()
-    {
-        var summaryId = "someSummaryId";
-        var summaryResponse = new ServiceResult<Summary>()
-        {
-            Success = true,
-            Data = new SummaryBuilder()
-                .WithId(summaryId)
-                .Build()
-        };
-
-        var aIContentCreationRequest = new AIContentCreationRequest()
-        {
-            SubtopicIndex = "1.1"
-        };
-
-        var configurationResult = new ServiceResult<Configuration>()
-        {
-            Success = true,
-            Data = new ConfigurationBuilder().Build()
-        };
-
-        var openAIResponse = new OpenAIResponseBuilder()
-            .WithChoices(new List<Choices>()
-            {
-                new ChoicesBuilder()
-                .WithMessage(new MessageBuilder()
-                    .WithContent(
-                        "{\"Subtopic\":{\"Index\":\"1.1\",\"Title\":\"Introduction\",\"Content\":[\"content\"]}}"
-                     )
-                    .Build()
-                )
-                .Build()
-            })
-            .Build();
-
-        var makeExerciseResult = new ServiceResult<string>()
-        {
-            Success = true,
-            Data = "exerciseId"
-        };
-
-        var contentId = "contentId";
-
-        var chatCompletionsReturn = new ServiceResult<ChatCompletion>()
-        {
-            Success = false
-        };
-
-        _mockSummaryService.Setup(s => s.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(summaryResponse);
-
-        _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(configurationResult);
-
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
-            .ReturnsAsync(openAIResponse);
-
-        _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(makeExerciseResult);
-
-        _mockContentRepository.SetupSequence(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentId)
-            .ReturnsAsync(string.Empty);
-
-        _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(chatCompletionsReturn);
-
-        var result = await contentService.MakeContent(summaryId, aIContentCreationRequest);
-
-        result.Success.Should().BeFalse();
-        result.ErrorMessage.Should().Contain("Error to update content");
     }
 
     [Fact]
@@ -700,7 +635,7 @@ public class ContentServiceTests
         _mockChatCompletionsService.Setup(c => c.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatCompletionsReturn);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -780,7 +715,7 @@ public class ContentServiceTests
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -865,7 +800,7 @@ public class ContentServiceTests
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -886,8 +821,8 @@ public class ContentServiceTests
         result.Data.Should().NotBeNullOrEmpty();
         result.Data.Length.Should().Be(36);
 
-        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()),Times.Never);
-        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>()), Times.Once);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()),Times.Never);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -953,7 +888,7 @@ public class ContentServiceTests
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
         _mockExerciseGeneratorService.Setup(e => e.MakeExercise(It.IsAny<Content>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -974,8 +909,8 @@ public class ContentServiceTests
         result.Data.Should().NotBeNullOrEmpty();
         result.Data.Length.Should().Be(36);
 
-        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()), Times.Once);
-        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>()), Times.Never);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+        _mockOpenAIService.Verify(o => o.DoRequest(It.IsAny<ChatCompletion>(), It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -990,6 +925,11 @@ public class ContentServiceTests
 
         var contentResponse = new ContentBuilder()
             .WithId(contentId)
+            .WithOriginId("iacademy")
+            .Build();
+
+        var masterContentResponse = new ContentBuilder()
+            .WithId("iacademy")
             .Build();
 
         var openAIResponse = new OpenAIResponseBuilder()
@@ -1012,19 +952,20 @@ public class ContentServiceTests
             Data = new ConfigurationBuilder().Build()
         };
 
-        _mockContentRepository.Setup(r => r.Get(contentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentResponse);
+        _mockContentRepository.SetupSequence(r => r.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentResponse)
+            .ReturnsAsync(masterContentResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        _mockContentRepository.Setup(r => r.Save(It.IsAny<Content>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentId);
+        _mockContentRepository.Setup(r => r.SaveAll(It.IsAny<List<Content>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<string>() { contentId, "iacademy" });
 
-        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest);
+        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest, textGenres);
 
         result.Success.Should().BeTrue();
         result.Data.Should().Be(contentId);
@@ -1040,7 +981,7 @@ public class ContentServiceTests
 
         var contentId = "someContentId";
 
-        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest);
+        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest, textGenres);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Contain("Content not found");
@@ -1056,8 +997,13 @@ public class ContentServiceTests
 
         var contentId = "someContentId";
 
+        var masterContentResponse = new ContentBuilder()
+            .WithId("iacademy")
+            .Build();
+
         var contentResponse = new ContentBuilder()
             .WithId(contentId)
+            .WithOriginId("iacademy")
             .Build();
 
         var configurationResult = new ServiceResult<Configuration>()
@@ -1068,16 +1014,17 @@ public class ContentServiceTests
 
         var openAIResponse = new OpenAIResponse();
 
-        _mockContentRepository.Setup(r => r.Get(contentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentResponse);
+        _mockContentRepository.SetupSequence(r => r.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentResponse)
+            .ReturnsAsync(masterContentResponse);
 
         _mockConfigurationService.Setup(x => x.Get(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configurationResult);
 
-        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>()))
+        _mockOpenAIService.Setup(o => o.DoRequest(It.IsAny<InputProperties>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(openAIResponse);
 
-        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest);
+        var result = await contentService.MakeAlternativeContent(contentId, subcontentRecreationRequest, textGenres);
 
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Contain("Error to get OpenAI response");

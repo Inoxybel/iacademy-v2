@@ -1,4 +1,5 @@
 ﻿using CrossCutting.Constants;
+using CrossCutting.Helpers;
 using Domain.DTO.Summary;
 using Domain.Entities.Summary;
 using Domain.Infra;
@@ -34,29 +35,29 @@ public class SummaryCacheRepository : BaseRedisCacheRepository, ISummaryReposito
         return summary;
     }
 
-    public async Task<List<Summary>> GetAllByCategory(List<string> summaryIds, string category, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllByCategory(PaginationRequest pagination, List<string> summaryIds, string category, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
-        return await _summaryRepository.GetAllByCategory(summaryIds, category, isAvaliable, cancellationToken);
+        return await _summaryRepository.GetAllByCategory(pagination, summaryIds, category, isAvaliable, cancellationToken);
     }
 
-    public async Task<List<Summary>> GetAllByCategoryAndSubcategory(List<string> summaryIds, string category, string subcategory, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllByCategoryAndSubcategory(PaginationRequest pagination, List<string> summaryIds, string category, string subcategory, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
-        return await _summaryRepository.GetAllByCategoryAndSubcategory(summaryIds, category, subcategory, isAvaliable, cancellationToken);
+        return await _summaryRepository.GetAllByCategoryAndSubcategory(pagination, summaryIds, category, subcategory, isAvaliable, cancellationToken);
     }
 
-    public async Task<List<Summary>> GetAllByIds(List<string> summaryIds, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllByIds(PaginationRequest pagination, List<string> summaryIds, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
-        return await _summaryRepository.GetAllByIds(summaryIds, isAvaliable, cancellationToken);
+        return await _summaryRepository.GetAllByIds(pagination, summaryIds, isAvaliable, cancellationToken);
     }
 
-    public async Task<List<Summary>> GetAllByOwnerId(string ownerId, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllByOwnerId(PaginationRequest pagination, string ownerId, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
-        return await _summaryRepository.GetAllByOwnerId(ownerId, isAvaliable, cancellationToken);
+        return await _summaryRepository.GetAllByOwnerId(pagination, ownerId, isAvaliable, cancellationToken);
     }
 
-    public async Task<List<Summary>> GetAllBySubcategory(List<string> summaryIds, string subcategory, bool isAvaliable = true, CancellationToken cancellationToken = default)
+    public async Task<PaginatedResult<Summary>> GetAllBySubcategory(PaginationRequest pagination, List<string> summaryIds, string subcategory, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
-        return await _summaryRepository.GetAllBySubcategory(summaryIds, subcategory, isAvaliable, cancellationToken);
+        return await _summaryRepository.GetAllBySubcategory(pagination, summaryIds, subcategory, isAvaliable, cancellationToken);
     }
 
     public async Task<bool> IsEnrolled(string summaryId, string ownerId, CancellationToken cancellationToken = default)

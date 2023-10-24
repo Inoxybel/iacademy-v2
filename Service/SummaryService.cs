@@ -1,4 +1,5 @@
-﻿using Domain.DTO;
+﻿using CrossCutting.Helpers;
+using Domain.DTO;
 using Domain.DTO.Summary;
 using Domain.Entities.Companies;
 using Domain.Entities.Summary;
@@ -42,56 +43,68 @@ public class SummaryService : ISummaryService
         return ServiceResult<Summary>.MakeSuccessResult(summary);
     }
 
-    public async Task<ServiceResult<List<Summary>>> GetAllByOwnerId(
+    public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllByOwnerId(
+        PaginationRequest pagination,
         string ownerId,
         bool isAvaliable = false,
         CancellationToken cancellationToken = default)
     {
-        var summaries = await _repository.GetAllByOwnerId(ownerId, isAvaliable, cancellationToken);
+        var summaries = await _repository.GetAllByOwnerId(pagination, ownerId, isAvaliable, cancellationToken);
 
-        if (summaries.Any())
+        if (summaries.Data.Any())
         {
-            return ServiceResult<List<Summary>>.MakeSuccessResult(summaries);
+            return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
         }
 
-        return ServiceResult<List<Summary>>.MakeErrorResult("Summary not found.");
+        return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summary not found.");
     }
 
-    public async Task<ServiceResult<List<Summary>>> GetAllAvaliableByDocument(string ownerId, string document, string companyRef, bool isAvaliable = false, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllAvaliableByDocument(
+        PaginationRequest pagination,
+        string ownerId, 
+        string document, 
+        string companyRef, 
+        bool isAvaliable = false,
+        CancellationToken cancellationToken = default)
     {
         var summaryIdsFromCompanyResponse = await GetAllAvaliableSummaryIdForUser(document, companyRef, cancellationToken);
 
         if (!summaryIdsFromCompanyResponse.Success)
-            return ServiceResult<List<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
+            return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
 
         var summaryIds = summaryIdsFromCompanyResponse.Data;
 
-        var summaries = await _repository.GetAllByIds(summaryIds, isAvaliable, cancellationToken);
+        var summaries = await _repository.GetAllByIds(pagination, summaryIds, isAvaliable, cancellationToken);
 
-        if (summaries.Any())
+        if (summaries.Data.Any())
         {
             var enrolledSummaryIds = await IsEnrolled(summaryIds, ownerId, cancellationToken);
 
             if(enrolledSummaryIds.Any())
             {
-                var filtredAvaliableSummaries = summaries
+                var filtredAvaliableSummaries = summaries.Data
                     .Where(s => !enrolledSummaryIds.Contains(s.Id))
                     .ToList();
+
+                summaries.Data = filtredAvaliableSummaries;
    
-                return ServiceResult<List<Summary>>.MakeSuccessResult(filtredAvaliableSummaries);
+                return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
             }
 
-            var avaliableSummaries = summaries
+            var avaliableSummaries = summaries.Data
                 .Where(s => !enrolledSummaryIds.Contains(s.OriginId))
                 .ToList();
 
-            return ServiceResult<List<Summary>>.MakeSuccessResult(avaliableSummaries);
+            summaries.Data = avaliableSummaries;
+
+            return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
         }
 
-        return ServiceResult<List<Summary>>.MakeErrorResult("Summaries not found.");
+        return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summaries not found.");
     }
 
-    public async Task<ServiceResult<List<Summary>>> GetAllByCategory(
+    public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllByCategory(
+        PaginationRequest pagination,
         string category,
         string document, 
         string companyRef,
@@ -101,21 +114,22 @@ public class SummaryService : ISummaryService
         var summaryIdsFromCompanyResponse = await GetAllAvaliableSummaryIdForUser(document, companyRef, cancellationToken);
 
         if (summaryIdsFromCompanyResponse.Success)
-            return ServiceResult<List<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
+            return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
 
         var summaryIds = summaryIdsFromCompanyResponse.Data;
 
-        var summaries = await _repository.GetAllByCategory(summaryIds, category, isAvaliable, cancellationToken);
+        var summaries = await _repository.GetAllByCategory(pagination, summaryIds, category, isAvaliable, cancellationToken);
 
-        if (summaries.Any())
+        if (summaries.Data.Any())
         {
-            return ServiceResult<List<Summary>>.MakeSuccessResult(summaries);
+            return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
         }
 
-        return ServiceResult<List<Summary>>.MakeErrorResult("Summary not found.");
+        return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summary not found.");
     }
 
-    public async Task<ServiceResult<List<Summary>>> GetAllByCategoryAndSubcategory(
+    public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllByCategoryAndSubcategory(
+        PaginationRequest pagination,
         string category,
         string subcategory, 
         string document, 
@@ -126,21 +140,22 @@ public class SummaryService : ISummaryService
         var summaryIdsFromCompanyResponse = await GetAllAvaliableSummaryIdForUser(document, companyRef, cancellationToken);
 
         if (summaryIdsFromCompanyResponse.Success)
-            return ServiceResult<List<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
+            return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
 
         var summaryIds = summaryIdsFromCompanyResponse.Data;
 
-        var summaries = await _repository.GetAllByCategoryAndSubcategory(summaryIds, category, subcategory, isAvaliable, cancellationToken);
+        var summaries = await _repository.GetAllByCategoryAndSubcategory(pagination, summaryIds, category, subcategory, isAvaliable, cancellationToken);
 
-        if (summaries.Any())
+        if (summaries.Data.Any())
         {
-            return ServiceResult<List<Summary>>.MakeSuccessResult(summaries);
+            return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
         }
 
-        return ServiceResult<List<Summary>>.MakeErrorResult("Summaries not found.");
+        return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summaries not found.");
     }
 
-    public async Task<ServiceResult<List<Summary>>> GetAllBySubcategory(
+    public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllBySubcategory(
+        PaginationRequest pagination,
         string subcategory,
         string document,
         string companyRef, 
@@ -150,18 +165,18 @@ public class SummaryService : ISummaryService
         var summaryIdsFromCompanyResponse = await GetAllAvaliableSummaryIdForUser(document, companyRef, cancellationToken);
 
         if (summaryIdsFromCompanyResponse.Success)
-            return ServiceResult<List<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
+            return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("There are no avaliable summaries for this user.");
 
         var summaryIds = summaryIdsFromCompanyResponse.Data;
 
-        var summaries = await _repository.GetAllBySubcategory(summaryIds, subcategory, isAvaliable, cancellationToken);
+        var summaries = await _repository.GetAllBySubcategory(pagination, summaryIds, subcategory, isAvaliable, cancellationToken);
 
-        if (summaries.Any())
+        if (summaries.Data.Any())
         {
-            return ServiceResult<List<Summary>>.MakeSuccessResult(summaries);
+            return ServiceResult<PaginatedResult<Summary>>.MakeSuccessResult(summaries);
         }
 
-        return ServiceResult<List<Summary>>.MakeErrorResult("Summary not found.");
+        return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summary not found.");
     }
 
     public async Task<ServiceResult<string>> RequestCreationToAI(SummaryCreationRequest request, CancellationToken cancellationToken = default)
@@ -173,9 +188,7 @@ public class SummaryService : ISummaryService
 
         var configuration = configurationResponse.Data;
 
-        var openAIRequest = $"{configuration.Summary.InitialInput} {request.Theme} {configuration.Summary.FinalInput}";
-
-        var openAIResponse = await _openAIService.DoRequest(configuration.Summary, openAIRequest);
+        var openAIResponse = await _openAIService.DoRequest(configuration.Summary, request.Theme);
 
         if (string.IsNullOrEmpty(openAIResponse.Id))
             return ServiceResult<string>.MakeErrorResult("Failed to get OPENAI response");
@@ -195,6 +208,7 @@ public class SummaryService : ISummaryService
             ChatId = chatCompletionResult.Data,
             Icon = request.Icon,
             CreatedDate = DateTime.UtcNow,
+            ShouldGeneratePendency = request.ShouldGeneratePendency,
             Theme = request.Theme,
             Topics = MapTopicsFromResponse(openAIResponse)
         };

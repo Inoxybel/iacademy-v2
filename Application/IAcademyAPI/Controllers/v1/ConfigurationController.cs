@@ -44,6 +44,26 @@ public class ConfigurationController : ControllerBase
     }
 
     /// <summary>
+    /// Recuperar todas configuracoes
+    /// </summary>
+    /// <returns>Lista paginada contendo as configuracoes</returns>
+    [HttpGet()]
+    [ProducesResponseType(typeof(PaginatedResult<Configuration>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest request, CancellationToken cancellationToken = default)
+    {
+        var ownerId = User.FindFirst("OwnerId")?.Value;
+
+        if (!MasterOwner.Validate(ownerId))
+            return BadRequest("Invalid Token");
+
+        var result = await _configurationService.GetAll(request, cancellationToken);
+
+        return result.Success ? Ok(result.Data) : NotFound();
+    }
+
+    /// <summary>
     /// Criar nova configuracao
     /// </summary>
     /// <param name="configurationRequest">Objeto de configuracao</param>
@@ -60,7 +80,7 @@ public class ConfigurationController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _configurationService.Create(configurationRequest, cancellationToken);
@@ -85,7 +105,7 @@ public class ConfigurationController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _configurationService.Update(configurationId, configurationRequest, cancellationToken);

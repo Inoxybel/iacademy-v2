@@ -60,7 +60,7 @@ public class CorrectionController : ControllerBase
 
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _service.Update(correctionId, correction, cancellationToken);

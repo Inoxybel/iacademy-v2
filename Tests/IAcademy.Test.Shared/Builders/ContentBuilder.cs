@@ -29,6 +29,12 @@ public class ContentBuilder
         return this;
     }
 
+    public ContentBuilder WithOriginId(string originId)
+    {
+        content.OriginId = originId;
+        return this;
+    }
+
     public ContentBuilder WithOwnerId(string ownerId)
     {
         content.OwnerId = ownerId;

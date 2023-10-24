@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using CrossCutting.Enums;
 using CrossCutting.Extensions;
 using Domain.Entities;
 using Domain.Entities.Chat;
@@ -28,24 +29,24 @@ public class OpenAIService : IOpenAIService
         _options = options;
     }
 
-    public async Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput)
+    public async Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput, string textGenre = "Informative")
     {
         var objRequest = new OpenAIRequest()
         {
             Model = _options.Value.Model,
             Messages = new List<Message>()
+            {
+                new Message()
                 {
-                    new Message()
-                    {
-                        Role = "system",
-                        Content = configurations.InitialInput
-                    },
-                    new Message()
-                    {
-                        Role = "user",
-                        Content = configurations.FinalInput.Replace("{THEME}", userInput)
-                    }
+                    Role = "system",
+                    Content = configurations.InitialInput
                 },
+                new Message()
+                {
+                    Role = "user",
+                    Content = configurations.FinalInput.Replace("{REQUEST}", userInput).Replace("{TEXTGENRE}", textGenre)
+                }
+            },
             Temperature = 0.8
         };
 
@@ -79,7 +80,7 @@ public class OpenAIService : IOpenAIService
         return new OpenAIResponse();
     }
 
-    public async Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput)
+    public async Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput, string textGenre = "Informative")
     {
         var recoveredMessage = chatCompletion.Choices.First().Message;
 
@@ -101,7 +102,7 @@ public class OpenAIService : IOpenAIService
                 new()
                 {
                     Role = "user",
-                    Content = configurations.FinalInput.Replace("{REQUEST}", userInput)
+                    Content = configurations.FinalInput.Replace("{REQUEST}", userInput).Replace("{TEXTGENRE}", textGenre)
                 }
             },
             Temperature = 0.7,
