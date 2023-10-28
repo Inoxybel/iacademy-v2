@@ -35,7 +35,7 @@ public class ConfigurationController : ControllerBase
     {
         var ownerId = User.FindFirst("OwnerId")?.Value;
 
-        if (MasterOwner.Validate(ownerId))
+        if (!MasterOwner.Validate(ownerId))
             return BadRequest("Invalid Token");
 
         var result = await _configurationService.Get(configurationId, cancellationToken);

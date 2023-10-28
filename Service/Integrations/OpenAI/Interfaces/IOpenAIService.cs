@@ -8,4 +8,5 @@ public interface IOpenAIService
 {
     Task<OpenAIResponse> DoRequest(InputProperties configurations, string userInput, string textGenre = "Informative");
     Task<OpenAIResponse> DoRequest(ChatCompletion chatCompletion, InputProperties configurations, string userInput, string textGenre = "Informative");
+    Task<OpenAIResponse> DoRequest(string chatCompletion, InputProperties configurations, string userInput, string textGenre = "Informative");
 }

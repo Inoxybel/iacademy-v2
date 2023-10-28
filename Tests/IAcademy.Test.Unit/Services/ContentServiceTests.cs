@@ -1487,9 +1487,13 @@ public class ContentServiceTests
                     new CompanyGroup()
                     {
                         GroupName = "GroupName",
-                        UsersDocument = new()
+                        Users = new()
                         {
-                            "document"
+                            new()
+                            {
+                                Document = "document",
+                                Name = "Name"
+                            }
                         },
                         AuthorizedTrainingIds = new()
                         {

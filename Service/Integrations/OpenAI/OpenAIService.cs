@@ -152,4 +152,61 @@ public class OpenAIService : IOpenAIService
 
         return response;
     }
+
+    public async Task<OpenAIResponse> DoRequest(string chatCompletion, InputProperties configurations, string userInput, string textGenre = "Informative")
+    {
+        var objRequest = new OpenAIRequest()
+        {
+            Model = _options.Value.Model,
+            Messages = new()
+            {
+                new()
+                {
+                    Role = "system",
+                    Content = configurations.InitialInput
+                },
+                new()
+                {
+                    Role = "assistant",
+                    Content = chatCompletion
+                },
+                new()
+                {
+                    Role = "user",
+                    Content = configurations.FinalInput.Replace("{REQUEST}", userInput).Replace("{TEXTGENRE}", textGenre)
+                }
+            },
+            Temperature = 0.7,
+            MaxTokens = 7000
+        };
+
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new SnakeCaseNamingStrategy()
+            }
+        };
+
+        var request = JsonConvert.SerializeObject(objRequest, settings);
+
+        var response = await ExecuteWithRetryPolicy(async () =>
+        {
+            var jsonContent = new StringContent(request, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(URI, jsonContent);
+
+            return response;
+        }, RETRY_COUNT);
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            var openIAResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseContent);
+            return openIAResponse!;
+        }
+
+        return new OpenAIResponse();
+    }
 }

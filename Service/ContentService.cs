@@ -295,9 +295,11 @@ public class ContentService : IContentService
             {
                 var getSubcontentTarget = contents[request.SubcontentIndex].SubcontentHistory;
                 var getLastSubcontent = content.FindSubcontentHistoryByIndexAndGenre(request.SubcontentIndex, GetCurrentGenre(getSubcontentTarget)).Content;
-                
+
+                var summaryContent = chatCompletionResponse.Data.Choices.First().Message.Content.Deserialize<SummaryContentsDTO>();
+
                 openAIResponse = await _openAIService.DoRequest(
-                    chatCompletionResponse.Data, 
+                    summaryContent.Subtopic.Content[request.SubcontentIndex], 
                     configuration.NewContentWithChat,
                     getLastSubcontent?? string.Empty,
                     textGenre.ToString()
@@ -582,7 +584,7 @@ public class ContentService : IContentService
     {
         var contentToDesactive = contents[subtopicIndex].SubcontentHistory.Find(b => b.DisabledDate == DateTime.MinValue);
 
-        contentToDesactive.DisabledDate = DateTime.UtcNow;
+        contentToDesactive!.DisabledDate = DateTime.UtcNow;
 
         contents[subtopicIndex].SubcontentHistory.Remove(contentToDesactive);
 

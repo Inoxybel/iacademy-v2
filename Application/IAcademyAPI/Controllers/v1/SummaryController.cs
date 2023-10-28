@@ -168,6 +168,32 @@ public class SummaryController : ControllerBase
     }
 
     /// <summary>
+    /// Recupera todos treinamentos da empresa
+    /// </summary>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Lista de sumarios</returns>
+    [HttpGet("company/available")]
+    [ProducesResponseType(typeof(PaginatedResult<SummaryResumeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult<PaginatedResult<SummaryResumeResponse>>> GetAllAvaliableToCompany(
+        [FromQuery] PaginationRequest pagination,
+        CancellationToken cancellationToken = default)
+    {
+        var ownerId = User.FindFirst("OwnerId")?.Value;
+
+        if (string.IsNullOrEmpty(ownerId))
+            return BadRequest("Invalid Token");
+
+        var result = await _summaryService.GetAllAvailableToCompany(pagination, ownerId, cancellationToken);
+
+        if (!result.Success)
+            return NotFound(result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
     /// Recupera todos sumarios por subcategoria
     /// </summary>
     /// <param name="subcategory">Subcategoria do treinamento</param>

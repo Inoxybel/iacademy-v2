@@ -14,9 +14,12 @@ public class CompanyGroupBuilder
     private static CompanyGroup CreateDefault() => new CompanyGroup
     {
         GroupName = "defaultGroupName",
-        UsersDocument = new List<string>()
+        Users = new()
         {
-            "*"
+            new()
+            {
+                Document = "*"
+            }
         },
         AuthorizedTrainingIds = new List<string>()
         {
@@ -30,9 +33,9 @@ public class CompanyGroupBuilder
         return this;
     }
 
-    public CompanyGroupBuilder WithUsersDocument(List<string> usersDocument)
+    public CompanyGroupBuilder WithUsersDocument(List<UserInfo> users)
     {
-        group.UsersDocument = usersDocument;
+        group.Users = users;
         return this;
     }
 

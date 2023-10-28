@@ -9,12 +9,7 @@ using Domain.Entities.Feedback;
 using Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 
 namespace IAcademyAPI.Controllers.v1;

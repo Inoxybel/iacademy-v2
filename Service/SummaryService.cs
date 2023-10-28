@@ -59,6 +59,21 @@ public class SummaryService : ISummaryService
         return ServiceResult<PaginatedResult<Summary>>.MakeErrorResult("Summary not found.");
     }
 
+    public async Task<ServiceResult<PaginatedResult<SummaryResumeResponse>>> GetAllAvailableToCompany(
+    PaginationRequest pagination,
+    string ownerId,
+    CancellationToken cancellationToken = default)
+    {
+        var company = await _companyService.GetByRef(ownerId, cancellationToken);
+
+        if (company is null)
+            return ServiceResult<PaginatedResult<SummaryResumeResponse>>.MakeErrorResult("Company not found.");
+
+        var summaries = await _repository.GetAllAvailableToCompany(pagination, ownerId, cancellationToken);
+
+        return ServiceResult<PaginatedResult<SummaryResumeResponse>>.MakeSuccessResult(summaries);
+    }
+
     public async Task<ServiceResult<PaginatedResult<Summary>>> GetAllAvaliableByDocument(
         PaginationRequest pagination,
         string ownerId, 

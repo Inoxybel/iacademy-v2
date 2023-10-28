@@ -1,6 +1,7 @@
 ﻿using Domain.DTO.Content;
 using Domain.Entities.Contents;
 using Domain.Infra;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Infra.Repositories;
@@ -60,14 +61,24 @@ public class ContentRepository : IContentRepository
     {
         try
         {
-            await _dbContext.Content.InsertManyAsync(contents, null, cancellationToken);
+            var bulkOperations = contents.Select(content =>
+                new ReplaceOneModel<Content>(
+                    filter: new BsonDocument("_id", content.Id),
+                    replacement: content)
+                {
+                    IsUpsert = true
+                }).ToList();
+
+            await _dbContext.Content.BulkWriteAsync(bulkOperations, cancellationToken: cancellationToken);
+
             return contents.Select(c => c.Id).ToList();
         }
         catch
         {
-            return new();
+            return new List<string>();
         }
     }
+
 
     public async Task<bool> Update(string contentId, ContentRequest request, CancellationToken cancellationToken = default)
     {

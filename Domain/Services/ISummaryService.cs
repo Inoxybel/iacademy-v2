@@ -8,6 +8,7 @@ namespace Domain.Services;
 public interface ISummaryService
 {
     Task<ServiceResult<Summary>> Get(string summaryId, CancellationToken cancellationToken = default);
+    Task<ServiceResult<PaginatedResult<SummaryResumeResponse>>> GetAllAvailableToCompany(PaginationRequest pagination, string ownerId, CancellationToken cancellationToken = default);
     Task<bool> IsEnrolled(string summaryId, string ownerId, CancellationToken cancellationToken = default);
     Task<bool> ShouldGeneratePendency(string summaryId, string ownerId, CancellationToken cancellationToken = default);
     Task<List<string>> IsEnrolled(List<string> summaryIds, string ownerId, CancellationToken cancellationToken = default);

@@ -7,6 +7,8 @@ public class Company
     public string Cnpj { get; set; }
     public List<CompanyGroup> Groups { get; set; }
 
+    public int LimitPlan { get; set; }
+
     public List<CompanyGroup> GetGroupByUserDocument(string userDocument) =>
-        Groups.Where(group => group.UsersDocument.Contains(userDocument) || group.UsersDocument.Contains("*")).ToList();
+        Groups.Where(group => group.Users.Any(u => u.Document == userDocument) || group.Users.Any(u => u.Document == "*")).ToList();
 }

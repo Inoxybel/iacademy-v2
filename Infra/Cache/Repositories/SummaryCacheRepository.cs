@@ -35,6 +35,11 @@ public class SummaryCacheRepository : BaseRedisCacheRepository, ISummaryReposito
         return summary;
     }
 
+    public async Task<PaginatedResult<SummaryResumeResponse>> GetAllAvailableToCompany(PaginationRequest pagination, string ownerId, CancellationToken cancellationToken = default)
+    {
+        return await _summaryRepository.GetAllAvailableToCompany(pagination, ownerId, cancellationToken);
+    }
+
     public async Task<PaginatedResult<Summary>> GetAllByCategory(PaginationRequest pagination, List<string> summaryIds, string category, bool isAvaliable = true, CancellationToken cancellationToken = default)
     {
         return await _summaryRepository.GetAllByCategory(pagination, summaryIds, category, isAvaliable, cancellationToken);

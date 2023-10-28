@@ -56,12 +56,16 @@ public static class JsonSerializerExtensions
             {
                 Console.WriteLine(exInner);
 
-                var lastRetry = JsonSerializer.Deserialize<T>(stringToDeserialize, enumOptions);
+                try
+                {
+                    var lastRetry = JsonSerializer.Deserialize<T>(stringToDeserialize, enumOptions);
 
-                if (lastRetry is null)
+                    return lastRetry;
+                }
+                catch(Exception lastException)
+                {
                     return new();
-
-                return lastRetry;
+                }
             }
         }
     }

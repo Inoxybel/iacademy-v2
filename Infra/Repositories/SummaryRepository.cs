@@ -42,6 +42,31 @@ public class SummaryRepository : ISummaryRepository
         };
     }
 
+    public async Task<PaginatedResult<SummaryResumeResponse>> GetAllAvailableToCompany(
+        PaginationRequest pagination,
+        string ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<Summary>.Filter.Where(s => s.OwnerId == ownerId);
+
+        var totalRecords = await _dbContext.Summary.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var data = await _dbContext.Summary.Find(filter)
+            .Skip((pagination.PageNumber - 1) * pagination.PageSize)
+            .Limit(pagination.PageSize)
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var mappedData = data.Select(MapToResponse).ToList();
+
+        return new PaginatedResult<SummaryResumeResponse>
+        {
+            Data = mappedData,
+            TotalRecords = totalRecords,
+            Page = pagination.PageNumber,
+            PageSize = pagination.PageSize
+        };
+    }
+
     public async Task<PaginatedResult<Summary>> GetAllByIds(
         PaginationRequest pagination,
         List<string> summaryIds, 
@@ -224,4 +249,30 @@ public class SummaryRepository : ISummaryRepository
 
         return false;
     }
+
+    private SummaryResumeResponse MapToResponse(Summary summary)
+    {
+        return new SummaryResumeResponse
+        {
+            Id = summary.Id,
+            Icon = summary.Icon,
+            IsAvaliable = summary.IsAvaliable,
+            Category = summary.Category,
+            ShouldGeneratePendency = summary.ShouldGeneratePendency,
+            Subcategory = summary.Subcategory,
+            Theme = summary.Theme,
+            Topics = summary.Topics.Select(t => new TopicResumeDTO
+            {
+                Index = t.Index,
+                Title = t.Title,
+                Description = t.Description,
+                Subtopics = t.Subtopics.Select(st => new SubtopicResumeDTO
+                {
+                    Index = st.Index,
+                    Title = st.Title
+                }).ToList()
+            }).ToList()
+        };
+    }
+
 }
